@@ -18,6 +18,27 @@ MinutesSince(previous_time)
     return time_difference
 }
 
+IsBarMutated(x, y)
+{
+    ImageSearch, FoundX, FoundY, x-5, y-5, x+5, y+5, %A_ScriptDir%\images\BAR.png
+    return (ErrorLevel == 0)
+}
+
+Feed(x1, y1, x2, y2)
+{
+    MouseClickDrag, Left, x1, y1, x2, y2
+    Sleep, 100
+    ImageSearch, FoundX, FoundY, 0, 0, A_ScreenWidth, A_ScreenHeight, *40 %A_ScriptDir%\images\feed_50.png
+    If (ErrorLevel == 0)
+        MouseClick, Left, FoundX, FoundY
+}
+
+BecameGifted()
+{
+    ImageSearch, FoundX, FoundY, 0, 0, A_ScreenWidth, A_ScreenHeight, *40 %A_ScriptDir%\images\gifted_success.png
+    return (ErrorLevel == 0)
+}
+
 IsBagFull()
 {
     ; PixelColor is F70017, but PixelSearch is unreliable
@@ -70,9 +91,9 @@ PlaceSprinklers(SprinklerCount:=1)
         RemainingSprinklers--
         If (RemainingSprinklers < 1)
             break
-        Sleep, 400
+        Sleep, 500
         Jump()
-        Sleep, 800
+        Sleep, 700
     }
 }
 
@@ -209,7 +230,7 @@ BugRun(slot:=3)
 {
     FaceHive()
     RotateCamera(4)
-    (%slot% < 3) ? KeyPress("d", (1225 * (3 - slot))) : KeyPress("a", (1225 * (slot - 3)))
+    (slot < 3) ? KeyPress("d", (1225 * (3 - slot))) : KeyPress("a", (1225 * (slot - 3)))
     bugrun_cooldown := A_NowUTC
 
     Menu, Tray, Icon, %A_ScriptDir%\icons\mushroom.ico
@@ -491,16 +512,67 @@ Mondo()
     If (MinutesSince(mondo_cooldown) < 40)
         return
 
-    FormatTime, CurrentMinute , A_NowUTC, m
-    If (CurrentMinute > 13)
+    FormatTime, CurrentMinute, A_NowUTC, m
+    If (CurrentMinute >= 14)
         return
 
     Menu, Tray, Icon, %A_ScriptDir%\icons\mondo.ico
     mondo_cooldown := A_NowUTC
 
-    /*
-    TODO: Code for Mondo goes here
-    */
+    FaceHive()
+    KeyPress("d", 8000)
+    KeyPress("w", 1000)
+    Jump()
+    KeyPress("d", 1500)
+    Loop, 5
+    {
+        KeyPress("e")
+    }
+	ZoomOut(5)
+	Sleep, 2200
+	KeyPress("w", 3200)
+	RotateCamera(2)
+	Loop
+	{
+		/* Could grab ability tokens, but it's a bit dangerous
+			TODO: add additional death checks to ensure stability if grabbing tokens
+		Loop, 4
+		{
+			Sleep, 2800
+			KeyPress("a", 350)
+			Sleep, 350
+			KeyPress("d", 500)
+		}
+		*/
+		Sleep, 5000
+		ImageSearch, FoundX, FoundY, 0, 0, A_ScreenWidth, 120, *80 %A_ScriptDir%\images\mondobuff.png
+		If (ErrorLevel == 0)
+		{
+			; loot
+			KeyPress("a", 1000)
+			Loop, 7
+			{
+				Loop, 4
+				{
+					KeyPress("s", 750)
+					KeyPress("a", 200)
+					KeyPress("w", 750)
+					KeyPress("a", 200)
+				}
+				Loop, 4
+				{
+					KeyPress("s", 750)
+					KeyPress("d", 200)
+					KeyPress("w", 750)
+					KeyPress("d", 200)
+				}
+			}
+			break
+		}
+		FormatTime, CurrentMinute, A_NowUTC, m
+		If (CurrentMinute >= 15)
+			break
+	}
 
     ResetCharacter()
 }
