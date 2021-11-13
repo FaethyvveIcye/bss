@@ -26,6 +26,7 @@ $F1::
 			break
 	}
 	MouseMove, MouseX, MouseY
+	return
 }
 
 ; 50x Strawberries until gifted
@@ -41,6 +42,7 @@ $F2::
 			break
 	}
 	MouseMove, MouseX, MouseY
+	return
 }
 
 ; 50x Pineapples until gifted
@@ -56,6 +58,7 @@ $F3::
 			break
 	}
 	MouseMove, MouseX, MouseY
+	return
 }
 
 ; 50x Blueberries until gifted
@@ -71,6 +74,7 @@ $F4::
 			break
 	}
 	MouseMove, MouseX, MouseY
+	return
 }
 
 ; Bitterberries until BAR
