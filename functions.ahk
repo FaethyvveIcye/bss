@@ -27,10 +27,16 @@ IsBarMutated(x, y)
 Feed(x1, y1, x2, y2)
 {
     MouseClickDrag, Left, x1, y1, x2, y2
-    Sleep, 100
-    ImageSearch, FoundX, FoundY, 0, 0, A_ScreenWidth, A_ScreenHeight, *40 %A_ScriptDir%\images\feed_50.png
-    If (ErrorLevel == 0)
-        MouseClick, Left, FoundX, FoundY
+    Loop, 5
+    {
+        Sleep, 100
+        ImageSearch, FoundX, FoundY, 0, 0, A_ScreenWidth, A_ScreenHeight, *40 %A_ScriptDir%\images\feed_50.png
+        If (ErrorLevel == 0)
+        {
+            MouseClick, Left, FoundX, FoundY
+            break
+        }
+    }
 }
 
 BecameGifted()
@@ -111,7 +117,6 @@ FaceHive()
         If (A_Index > 10)
         {
             ResetCharacter()
-            FaceHive()
             break
         }
     }
@@ -235,7 +240,6 @@ BugRun(slot:=3)
 
     Menu, Tray, Icon, %A_ScriptDir%\icons\mushroom.ico
     KeyPress("w", 10000)
-	Click, Down         ; collector
     KeyPress("s", 100)
 	PlaceSprinklers(1)
     Loop, 4
@@ -251,12 +255,11 @@ BugRun(slot:=3)
     Jump()
     KeyPress("w", 4400)
     KeyPress("d", 1600)
-	PlaceSprinklers(1)
     KeyPress("w", 1200)
     KeyPress("d", 2000)
     KeyPress("s", 1800)
     KeyPress("a", 900)
-    Loop, 7
+    Loop, 6
     {
         Sleep, 500
         KeyPress("w", 600)
@@ -273,8 +276,7 @@ BugRun(slot:=3)
     Jump()
     KeyPress("a", 3000)
     KeyPress("s", 1000)
-	PlaceSprinklers(1)
-    Loop, 6
+    Loop, 5
     {
         Sleep, 100
         KeyPress("d", 800)
@@ -299,7 +301,7 @@ BugRun(slot:=3)
     Send, {s up}{a up}
     KeyPress("a", 1400)
     Menu, Tray, Icon, %A_ScriptDir%\icons\cactus.ico
-    Loop, 6
+    Loop, 5
     {
         Sleep, 500
         KeyPress("w", 500)
@@ -312,7 +314,7 @@ BugRun(slot:=3)
     KeyPress("w", 4000)
     KeyPress("s", 300)
 	PlaceSprinklers(1)
-    Loop, 5
+    Loop, 4
     {
         Sleep, 100
         KeyPress("a", 400)
@@ -328,7 +330,7 @@ BugRun(slot:=3)
     KeyPress("a", 4000)
     KeyPress("d", 200)
 	PlaceSprinklers(1)
-    Loop, 7
+    Loop, 6
     {
         Sleep, 100
         KeyPress("w", 500)
@@ -340,7 +342,6 @@ BugRun(slot:=3)
     Menu, Tray, Icon, %A_ScriptDir%\icons\polar.ico
     KeyPress("w", 1000)
     KeyPress("d", 12000)
-    Click, Up         ; collector
     KeyPress("s", 9000)
     KeyPress("a", 1200)
     RotateCamera(7)
@@ -380,7 +381,6 @@ BugRun(slot:=3)
     Menu, Tray, Icon, %A_ScriptDir%\icons\vicious.ico
     KeyPress("d", 1000)
     KeyPress("w", 2300)
-    PlaceSprinklers(1)
     KeyPress("s", 300)
     KeyPress("d", 2500)
     KeyPress("d", 1000)
@@ -389,9 +389,9 @@ BugRun(slot:=3)
     Loop, 6
     {
         Sleep, 500
-        KeyPress("w", 500)
+        KeyPress("s", 500)
         KeyPress("a", 500)
-        KeyPress("s", 400)
+        KeyPress("w", 400)
         KeyPress("d", 400)
     }
 
@@ -400,9 +400,8 @@ BugRun(slot:=3)
     KeyPress("d", 6000)
     KeyPress("a", 3000)
     KeyPress("d", 300)
-    Click, Down         ; collector
     PlaceSprinklers(1)
-    Loop, 6
+    Loop, 5
     {
         Sleep, 100
         KeyPress("d", 600)
@@ -417,7 +416,7 @@ BugRun(slot:=3)
     KeyPress("s", 800)
     KeyPress("a", 1000)
     PlaceSprinklers(1)
-    Loop, 6
+    Loop, 5
     {
         Sleep, 100
         KeyPress("a", 600)
@@ -470,7 +469,7 @@ BugRun(slot:=3)
     KeyPress("a", 500)
     KeyPress("w", 500)
     KeyPress("a", 500)
-    KeyPress("w", 3500)
+    KeyPress("w", 4500)
     KeyPress("s", 300)
     PlaceSprinklers(1)
     Loop, 6
@@ -501,7 +500,6 @@ BugRun(slot:=3)
         KeyPress("d", 800)
         KeyPress("w", 600)
     }
-    Click, Up         ; collector
     If (IsStuck())
         UnStick()
     ResetCharacter()
