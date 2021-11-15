@@ -1,9 +1,12 @@
 ;; Made by Lessy / Saber
+; Default Timestamps, do not change these
 global antpass_cooldown := 20211106000000
 global wealthclock_cooldown := 20211106000000
 global bugrun_cooldown := 20211106000000
 global mondo_cooldown := 20211106000000
 
+; Helper function to press a given key for a duration, similar to the JitBit function of the same name
+; Also gets around most games' detection of keypresses where simulated keypresses don't work consistently
 KeyPress(key, duration:=0)
 {
     Send, {%key% down}
@@ -11,19 +14,54 @@ KeyPress(key, duration:=0)
     Send, {%key% up}
 }
 
+; Helper function to assist in adding timers to different activities
 MinutesSince(previous_time)
 {
     time_difference := A_NowUTC
     EnvSub, time_difference, previous_time, Minutes
-    return time_difference
+    Return time_difference
 }
 
+; Checks if you are connected to the game by seeing if your sprinklers on hotkey #1 are visible or not
+IsConnected()
+{
+    ImageSearch, FoundX, FoundY, 0, A_ScreenHeight//2, A_ScreenWidth//2, A_ScreenHeight, *40 %A_ScriptDir%\images\reconnect_sprinkler.png
+    Return (ErrorLevel == 0)
+}
+
+; Claims a hive slot after reconnecting to the provided (or default) URL by launching it in your default web browser
+; Feel free to change the "Sleep, 2 * ..." to the appropriate amount of minutes you want to wait for the game to launch if your computer is very slow
+Reconnect(slot:=3, URL:="https://www.roblox.com/games/1537690962?privateServerLinkCode=50861032238192090661841504665735")
+{
+    Menu, Tray, Icon, %A_ScriptDir%\icons\connection_problems.ico
+
+    Run, %URL%
+    Sleep, 2 * 60 * 1000
+
+    If !(IsConnected())
+        Return Reconnect(slot, URL)
+
+    KeyPress("w", 5000)
+    KeyPress("s", 800)
+    (slot < 3) ? KeyPress("d", (1225 * (3 - slot))) : KeyPress("a", (1225 * (slot - 3)))
+    Loop, 5
+    {
+        KeyPress("e")
+    }
+    MouseMove, A_ScreenWidth//2, A_ScreenHeight//2
+    ResetCharacter()
+    Return
+}
+
+; Helper function to check if a bee has a BAR mutation, not fully implemented & tested yet
 IsBarMutated(x, y)
 {
     ImageSearch, FoundX, FoundY, x-5, y-5, x+5, y+5, %A_ScriptDir%\images\BAR.png
-    return (ErrorLevel == 0)
+    Return (ErrorLevel == 0)
 }
 
+; Feeds 50 fruits to a given bee
+; Needs extra logic outside of the function to loop & choose fruits & bee
 Feed(x1, y1, x2, y2)
 {
     MouseClickDrag, Left, x1, y1, x2, y2
@@ -39,19 +77,22 @@ Feed(x1, y1, x2, y2)
     }
 }
 
+; Checks the screen to see if the "Your bee became gifted!" popup happened
 BecameGifted()
 {
     ImageSearch, FoundX, FoundY, 0, 0, A_ScreenWidth, A_ScreenHeight, *40 %A_ScriptDir%\images\gifted_success.png
-    return (ErrorLevel == 0)
+    Return (ErrorLevel == 0)
 }
 
+; Checks to see if your bag is full
 IsBagFull()
 {
     ; PixelColor is F70017, but PixelSearch is unreliable
     ImageSearch, FoundX, FoundY, A_ScreenWidth//2, 0, A_ScreenWidth, A_ScreenHeight//4, *90 %A_ScriptDir%\images\bagfull.png
-    return (ErrorLevel == 0)
+    Return (ErrorLevel == 0)
 }
 
+; Rotates the camera one (or more) times
 RotateCamera(times:=1)
 {
     Loop, %times%
@@ -60,6 +101,7 @@ RotateCamera(times:=1)
     }
 }
 
+; Zooms out one (or more) times
 ZoomOut(times:=1)
 {
     Loop, %times%
@@ -68,6 +110,7 @@ ZoomOut(times:=1)
     }
 }
 
+; Presses the jump key, releasing it momentarily (or longer after)
 Jump(duration:=100)
 {
     Send, {Space down}
@@ -75,6 +118,7 @@ Jump(duration:=100)
     Send, {Space up}
 }
 
+; Resets your character one (or more) times
 ResetCharacter(times:=1)
 {
     Loop, %times%
@@ -88,6 +132,7 @@ ResetCharacter(times:=1)
     }
 }
 
+; Places down your sprinklers, jumping to place down additional sprinklers past the first
 PlaceSprinklers(SprinklerCount:=1)
 {
     RemainingSprinklers := SprinklerCount
@@ -97,12 +142,14 @@ PlaceSprinklers(SprinklerCount:=1)
         RemainingSprinklers--
         If (RemainingSprinklers < 1)
             break
-        Sleep, 500
+        Sleep, 700
         Jump()
         Sleep, 700
     }
 }
 
+; Rotates the camera to face your hive (ie. looking at all your bees)
+; Will reset character and assume it faces the hive if it fails repeatedly
 FaceHive()
 {
     Loop
@@ -110,18 +157,29 @@ FaceHive()
         ; checks bottom-left quadrant of screen for sprinkler on hivecomb background
         ; for a full-screen check, change co-ordinates to: 0, 0, A_ScreenWidth, A_ScreenHeight
         ImageSearch, FoundX, FoundY, 0, A_ScreenHeight//2, A_ScreenWidth//2, A_ScreenHeight, *90 %A_ScriptDir%\images\hivecomb.png
-        RotateCamera(4)
         If (ErrorLevel == 0)
             break
-        Sleep, 500
-        If (A_Index > 10)
+        
+        ImageSearch, FoundX, FoundY, 0, A_ScreenHeight//2, A_ScreenWidth//2, A_ScreenHeight, *90 %A_ScriptDir%\images\hivecomb2.png
+        If (ErrorLevel == 0)
+            break
+        
+        ImageSearch, FoundX, FoundY, 0, A_ScreenHeight//2, A_ScreenWidth//2, A_ScreenHeight, *90 %A_ScriptDir%\images\hivecomb3.png
+        If (ErrorLevel == 0)
+            break
+        
+        RotateCamera(4)
+        Sleep, 1000
+        If (A_Index > 6)
         {
             ResetCharacter()
-            break
+            Return
         }
     }
+    RotateCamera(4)
 }
 
+; Checks to see if you're stuck in a shop / dispenser
 IsStuck()
 {
     Loop, Files, %A_ScriptDir%\errors\shop_*.png
@@ -130,11 +188,12 @@ IsStuck()
         ; for a full-screen check, change co-ordinates to: 0, 0, A_ScreenWidth, A_ScreenHeight
         ImageSearch, FoundX, FoundY, A_ScreenWidth//2, 0, A_ScreenWidth, A_ScreenHeight//2, *90 %A_LoopFileFullPath%
         If (ErrorLevel == 0)
-            return true
+            Return true
     }
-    return false
+    Return false
 }
 
+; Presses "E" to get out of a shop that you might be stuck in, then waits a little
 UnStick()
 {
     Sleep, 100
@@ -142,11 +201,12 @@ UnStick()
     Sleep, 1000
 }
 
-; Task-Based Functions
+; Grabs wealth clock by walking past clover, then resets
+; Automatically skips trying to get the wealth clock if it hasn't been an hour
 WealthClock()
 {
     If (MinutesSince(wealthclock_cooldown) < 60)
-        return
+        Return
 
     Menu, Tray, Icon, %A_ScriptDir%\icons\clock.ico
     wealthclock_cooldown := A_NowUTC
@@ -193,10 +253,12 @@ WealthClock()
     ResetCharacter()
 }
 
+; Grabs an ant pass from the free dispenser, then resets - will not do ant challenges
+; Automatically skips trying to get a pass if
 AntPass()
 {
     If (MinutesSince(antpass_cooldown) < 120)
-        return
+        Return
 
     Menu, Tray, Icon, %A_ScriptDir%\icons\ant.ico
     antpass_cooldown := A_NowUTC
@@ -231,6 +293,12 @@ AntPass()
     ResetCharacter()
 }
 
+; Does a bug run starting from any slot
+; Enough Jump Power & Movement Speed required (gummy boots / clogs / maybe mountaintop)
+; Gifted hasty / too many haste token bees / bear bee can cause runs where bugs or fields are missed
+; Walks in a pattern conducive to activating vicious spikes in applicable fields
+; Grabs some pollen in Polar Bear's quest fields on the way through & turns in Polar quests
+; Paths inspired by e_IoI (mush-spider-straw-cactus-pumpkin-pine-polar-rose-sunf-dand-clover-bluf-bamboo-pineapple)
 BugRun(slot:=3)
 {
     FaceHive()
@@ -428,8 +496,10 @@ BugRun(slot:=3)
     Menu, Tray, Icon, %A_ScriptDir%\icons\clover.ico
     KeyPress("d", 2000)
     KeyPress("w", 1500)
+    Sleep, 500
     Jump()
     KeyPress("d", 2000)
+    Sleep, 500
     Jump()
     KeyPress("d", 2500)
     Menu, Tray, Icon, %A_ScriptDir%\icons\vicious.ico
@@ -462,6 +532,7 @@ BugRun(slot:=3)
     KeyPress("w", 1500)
     KeyPress("d", 5500)
     KeyPress("a", 1200)
+    Sleep, 500
     Jump()
     KeyPress("w", 600)
     KeyPress("a", 500)
@@ -487,6 +558,7 @@ BugRun(slot:=3)
     Jump(21000)         ; allows haste to expire & prevents new token generation
     KeyPress("s", 3200)
     KeyPress("a", 100)
+    Sleep, 500
     Jump()
     KeyPress("d", 1500)
     KeyPress("w", 10000)
@@ -505,14 +577,17 @@ BugRun(slot:=3)
     ResetCharacter()
 }
 
+; Kills Mondo chick & loots the items
+; Automatically skips if it's not time for Mondo or it's already dead
+; MAKE SURE YOUR COMPUTER CLOCK IS SET PROPERLY
 Mondo()
 {
     If (MinutesSince(mondo_cooldown) < 40)
-        return
+        Return
 
     FormatTime, CurrentMinute, A_NowUTC, m
     If (CurrentMinute >= 14)
-        return
+        Return
 
     Menu, Tray, Icon, %A_ScriptDir%\icons\mondo.ico
     mondo_cooldown := A_NowUTC
@@ -530,10 +605,21 @@ Mondo()
 	Sleep, 2200
 	KeyPress("w", 3200)
 	RotateCamera(2)
+
+    ClickedChatOff := False
+    ImageSearch, ChatX, ChatY, 0, 0, 200, 200, *90 %A_ScriptDir%\images\chat_active.png
+    If (ErrorLevel == 0)
+    {
+        MouseMove, ChatX, ChatY
+        Click, Down
+        Click, Up
+        ClickedChatOff = True
+    }
+
 	Loop
 	{
-		/* Could grab ability tokens, but it's a bit dangerous
-			TODO: add additional death checks to ensure stability if grabbing tokens
+		/*
+		TODO: add additional death checks to ensure stability if grabbing tokens
 		Loop, 4
 		{
 			Sleep, 2800
@@ -543,25 +629,26 @@ Mondo()
 		}
 		*/
 		Sleep, 5000
-		ImageSearch, FoundX, FoundY, 0, 0, A_ScreenWidth, 120, *80 %A_ScriptDir%\images\mondobuff.png
+		ImageSearch, FoundX, FoundY, 0, 0, A_ScreenWidth, 120, *40 %A_ScriptDir%\images\mondobuff.png
 		If (ErrorLevel == 0)
 		{
 			; loot
-			KeyPress("a", 1000)
-			Loop, 7
+			KeyPress("a", 500)
+            KeyPress("w", 500)
+			Loop, 6
 			{
 				Loop, 4
 				{
-					KeyPress("s", 750)
+					KeyPress("s", 1200)
 					KeyPress("a", 200)
-					KeyPress("w", 750)
+					KeyPress("w", 1200)
 					KeyPress("a", 200)
 				}
 				Loop, 4
 				{
-					KeyPress("s", 750)
+					KeyPress("s", 1200)
 					KeyPress("d", 200)
-					KeyPress("w", 750)
+					KeyPress("w", 1200)
 					KeyPress("d", 200)
 				}
 			}
@@ -572,5 +659,14 @@ Mondo()
 			break
 	}
 
+    If (ClickedChatOff) {
+        MouseMove, ChatX, ChatY
+        Click, Down
+        Click, Up
+        MouseMove, A_ScreenWidth//2, A_ScreenHeight//2
+    }
+
+    If (IsStuck())
+        UnStick()
     ResetCharacter()
 }
