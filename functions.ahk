@@ -31,7 +31,7 @@ IsConnected()
 
 ; Claims a hive slot after reconnecting to the provided (or default) URL by launching it in your default web browser
 ; Feel free to change the "Sleep, 2 * ..." to the appropriate amount of minutes you want to wait for the game to launch if your computer is very slow
-Reconnect(slot:=3, URL:="https://www.roblox.com/games/1537690962?privateServerLinkCode=50861032238192090661841504665735")
+Reconnect(slot:=3, URL:="https://www.roblox.com/games/1537690962?privateServerLinkCode=5086103223819209066184150466573")
 {
     Menu, Tray, Icon, %A_ScriptDir%\icons\connection_problems.ico
 
