@@ -6,7 +6,6 @@ global bugrun_cooldown := 20211106000000
 global mondo_cooldown := 20211106000000
 
 ; Helper function to press a given key for a duration, similar to the JitBit function of the same name
-; Also gets around most games' detection of keypresses where simulated keypresses don't work consistently
 KeyPress(key, duration:=0)
 {
     Send, {%key% down}
@@ -30,7 +29,6 @@ IsConnected()
 }
 
 ; Claims a hive slot after reconnecting to the provided (or default) URL by launching it in your default web browser
-; Feel free to change the "Sleep, 2 * ..." to the appropriate amount of minutes you want to wait for the game to launch if your computer is very slow
 Reconnect(slot:=3, URL:="https://www.roblox.com/games/1537690962?privateServerLinkCode=5086103223819209066184150466573")
 {
     Menu, Tray, Icon, %A_ScriptDir%\icons\connection_problems.ico
@@ -53,15 +51,14 @@ Reconnect(slot:=3, URL:="https://www.roblox.com/games/1537690962?privateServerLi
     Return
 }
 
-; Helper function to check if a bee has a BAR mutation, not fully implemented & tested yet
+; Helper function to check if a bee has a BAR mutation, not fully implemented
 IsBarMutated(x, y)
 {
     ImageSearch, FoundX, FoundY, x-5, y-5, x+5, y+5, %A_ScriptDir%\images\BAR.png
     Return (ErrorLevel == 0)
 }
 
-; Feeds 50 fruits to a given bee
-; Needs extra logic outside of the function to loop & choose fruits & bee
+; Helper function to feed 50 fruits to a given bee
 Feed(x1, y1, x2, y2)
 {
     MouseClickDrag, Left, x1, y1, x2, y2
@@ -132,7 +129,7 @@ ResetCharacter(times:=1)
     }
 }
 
-; Places down your sprinklers, jumping to place down additional sprinklers past the first
+; Places down your sprinklers, jump-glitching to place more if needed
 PlaceSprinklers(SprinklerCount:=1)
 {
     RemainingSprinklers := SprinklerCount
@@ -149,7 +146,6 @@ PlaceSprinklers(SprinklerCount:=1)
 }
 
 ; Rotates the camera to face your hive (ie. looking at all your bees)
-; Will reset character and assume it faces the hive if it fails repeatedly
 FaceHive()
 {
     Loop
@@ -201,8 +197,7 @@ UnStick()
     Sleep, 1000
 }
 
-; Grabs wealth clock by walking past clover, then resets
-; Automatically skips trying to get the wealth clock if it hasn't been an hour
+; Grabs wealth clock, then resets, skipping if on cooldown automatically
 WealthClock()
 {
     If (MinutesSince(wealthclock_cooldown) < 60)
@@ -253,8 +248,7 @@ WealthClock()
     ResetCharacter()
 }
 
-; Grabs an ant pass from the free dispenser, then resets - will not do ant challenges
-; Automatically skips trying to get a pass if
+; Grabs ant pass, then resets, skipping if on cooldown automatically
 AntPass()
 {
     If (MinutesSince(antpass_cooldown) < 120)
@@ -293,12 +287,12 @@ AntPass()
     ResetCharacter()
 }
 
-; Does a bug run starting from any slot
 ; Enough Jump Power & Movement Speed required (gummy boots / clogs / maybe mountaintop)
 ; Gifted hasty / too many haste token bees / bear bee can cause runs where bugs or fields are missed
 ; Walks in a pattern conducive to activating vicious spikes in applicable fields
 ; Grabs some pollen in Polar Bear's quest fields on the way through & turns in Polar quests
 ; Paths inspired by e_IoI (mush-spider-straw-cactus-pumpkin-pine-polar-rose-sunf-dand-clover-bluf-bamboo-pineapple)
+; Does a bug run starting from any slot
 BugRun(slot:=3)
 {
     FaceHive()
@@ -360,22 +354,28 @@ BugRun(slot:=3)
     KeyPress("a", 1700)
     KeyPress("w", 6100)
     Menu, Tray, Icon, %A_ScriptDir%\icons\vicious.ico
-    KeyPress("d", 2500)
-	PlaceSprinklers(1)
-    KeyPress("d", 2500)
-    KeyPress("a", 200)
-    Send, {s down}{a down}
-    Sleep, 1200
-    Send, {s up}{a up}
-    KeyPress("a", 1400)
-    Menu, Tray, Icon, %A_ScriptDir%\icons\cactus.ico
-    Loop, 5
+    KeyPress("d", 5000)
+    
+    ; Walking out of the cave monsters' cave if necessary
+    ImageSearch, FoundX, FoundY, 0, A_ScreenHeight//2, A_ScreenWidth//2, A_ScreenHeight, *90 %A_ScriptDir%\images\cavemonster_cave.png
+    If (ErrorLevel == 0)
     {
-        Sleep, 500
-        KeyPress("w", 500)
-        KeyPress("d", 600)
-        KeyPress("s", 300)
-        KeyPress("a", 500)
+        KeyPress("a", 5000)
+    } Else {
+        KeyPress("a", 200)
+        Send, {s down}{a down}
+        Sleep, 1200
+        Send, {s up}{a up}
+        KeyPress("a", 1400)
+        Menu, Tray, Icon, %A_ScriptDir%\icons\cactus.ico
+        Loop, 5
+        {
+            Sleep, 500
+            KeyPress("w", 500)
+            KeyPress("d", 600)
+            KeyPress("s", 300)
+            KeyPress("a", 500)
+        }
     }
 
     Menu, Tray, Icon, %A_ScriptDir%\icons\pumpkin.ico
@@ -397,7 +397,6 @@ BugRun(slot:=3)
     Jump()
     KeyPress("a", 4000)
     KeyPress("d", 200)
-	PlaceSprinklers(1)
     Loop, 6
     {
         Sleep, 100
@@ -503,7 +502,6 @@ BugRun(slot:=3)
     Jump()
     KeyPress("d", 2500)
     Menu, Tray, Icon, %A_ScriptDir%\icons\vicious.ico
-    PlaceSprinklers(1)
     KeyPress("s", 1800)
     KeyPress("a", 1000)
     Loop, 5
@@ -518,7 +516,6 @@ BugRun(slot:=3)
     Menu, Tray, Icon, %A_ScriptDir%\icons\bluf.ico
     KeyPress("w", 5000)
     KeyPress("s", 200)
-    PlaceSprinklers(1)
     Loop, 5
     {
         Sleep, 100
@@ -542,7 +539,6 @@ BugRun(slot:=3)
     KeyPress("a", 500)
     KeyPress("w", 4500)
     KeyPress("s", 300)
-    PlaceSprinklers(1)
     Loop, 6
     {
         Sleep, 100
@@ -556,8 +552,8 @@ BugRun(slot:=3)
     KeyPress("w", 1500)
     KeyPress("d", 6000)
     Jump(21000)         ; allows haste to expire & prevents new token generation
-    KeyPress("s", 3200)
-    KeyPress("a", 100)
+    KeyPress("s", 3500)
+    KeyPress("a", 50)
     Sleep, 500
     Jump()
     KeyPress("d", 1500)
@@ -577,9 +573,10 @@ BugRun(slot:=3)
     ResetCharacter()
 }
 
-; Kills Mondo chick & loots the items
+
 ; Automatically skips if it's not time for Mondo or it's already dead
 ; MAKE SURE YOUR COMPUTER CLOCK IS SET PROPERLY
+; Kills Mondo chick & loots the items
 Mondo()
 {
     If (MinutesSince(mondo_cooldown) < 40)
@@ -614,6 +611,7 @@ Mondo()
         Click, Down
         Click, Up
         ClickedChatOff = True
+        MouseMove, A_ScreenWidth//2, A_ScreenHeight//2
     }
 
 	Loop
