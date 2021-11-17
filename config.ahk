@@ -6,7 +6,7 @@
 
 global sprinkler_amount := 3
 global hive_slot := 2
-global VIP_to_reconnect_to := "https://www.roblox.com/games/1537690962?privateServerLinkCode=50861032238192090661841504665735"
+global VIP_to_reconnect_to := "https://www.roblox.com/games/1537690962?privateServerLinkCode=5086103223819209066184150466573"
 global seconds_to_wait_on_reconnect := 120
 global movespeed := 28
 
