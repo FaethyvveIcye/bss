@@ -20,7 +20,7 @@ Loop
 {
 	Menu, Tray, Icon, %A_ScriptDir%\icons\handsome.ico
 	If !(IsConnected())
-		Reconnect(3)
+		Reconnect()
 
 	ResetCharacter()
 
@@ -31,7 +31,7 @@ Loop
 	Mondo()
 
 	If (MinutesSince(bugrun_cooldown) > 60)
-		BugRun(3)
+		BugRun()
 
 	Menu, Tray, Icon, %A_ScriptDir%\icons\sunf.ico
 	FaceHive()

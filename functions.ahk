@@ -1,15 +1,12 @@
 ;; Made by Lessy / Saber
-; Default Timestamps, do not change these
-global antpass_cooldown := 20211106000000
-global wealthclock_cooldown := 20211106000000
-global bugrun_cooldown := 20211106000000
-global mondo_cooldown := 20211106000000
+#Include config.ahk
 
 ; Helper function to press a given key for a duration, similar to the JitBit function of the same name
 KeyPress(key, duration:=0)
 {
+
     Send, {%key% down}
-    Sleep, %duration%
+    Sleep, (duration * movespeed_factor)
     Send, {%key% up}
 }
 
@@ -29,19 +26,19 @@ IsConnected()
 }
 
 ; Claims a hive slot after reconnecting to the provided (or default) URL by launching it in your default web browser
-Reconnect(slot:=3, URL:="https://www.roblox.com/games/1537690962?privateServerLinkCode=5086103223819209066184150466573")
+Reconnect()
 {
     Menu, Tray, Icon, %A_ScriptDir%\icons\connection_problems.ico
 
-    Run, %URL%
-    Sleep, 2 * 60 * 1000
+    Run, %VIP_to_reconnect_to%
+    Sleep, (seconds_to_wait_on_reconnect * 1000)
 
     If !(IsConnected())
-        Return Reconnect(slot, URL)
+        Return Reconnect()
 
     KeyPress("w", 5000)
     KeyPress("s", 800)
-    (slot < 3) ? KeyPress("d", (1225 * (3 - slot))) : KeyPress("a", (1225 * (slot - 3)))
+    (hive_slot < 3) ? KeyPress("d", (1225 * (3 - hive_slot))) : KeyPress("a", (1225 * (hive_slot - 3)))
     Loop, 5
     {
         KeyPress("e")
@@ -130,9 +127,9 @@ ResetCharacter(times:=1)
 }
 
 ; Places down your sprinklers, jump-glitching to place more if needed
-PlaceSprinklers(SprinklerCount:=1)
+PlaceSprinklers()
 {
-    RemainingSprinklers := SprinklerCount
+    RemainingSprinklers := sprinkler_amount
     Loop,
     {
         KeyPress("1")
@@ -218,11 +215,11 @@ WealthClock()
     Jump(100)
     KeyPress("w", 1000)
     Send, {d down}
-    Sleep, 2000
+    Sleep, 2000 * movespeed_factor
     Jump()
-    Sleep, 2000
+    Sleep, 2000 * movespeed_factor
     Jump()
-    Sleep, 2000
+    Sleep, 2000 * movespeed_factor
     Send, {d up}
     KeyPress("s", 2000)
     KeyPress("d", 3000)
@@ -230,15 +227,15 @@ WealthClock()
     KeyPress("d", 600)
     Sleep, 100
     Send, {d down}
-    Sleep, 3000
+    Sleep, 3000 * movespeed_factor
     Jump()
-    Sleep, 1500
+    Sleep, 1500 * movespeed_factor
     Jump()
-    Sleep, 1000
+    Sleep, 1000 * movespeed_factor
     Send, {d up}
     Sleep, 100
     Send, {w down}
-    Sleep, 1100
+    Sleep, 1100 * movespeed_factor
     Jump()
     Loop, 50
     {
@@ -287,23 +284,23 @@ AntPass()
     ResetCharacter()
 }
 
-; Enough Jump Power & Movement Speed required (gummy boots / clogs / maybe mountaintop)
-; Gifted hasty / too many haste token bees / bear bee can cause runs where bugs or fields are missed
+; Enough Jump Power & Movement Speed required (gummy boots / clogs / mountaintop)
+; Too many haste token bees / bear bee can cause runs where bugs or fields are missed
 ; Walks in a pattern conducive to activating vicious spikes in applicable fields
 ; Grabs some pollen in Polar Bear's quest fields on the way through & turns in Polar quests
 ; Paths inspired by e_IoI (mush-spider-straw-cactus-pumpkin-pine-polar-rose-sunf-dand-clover-bluf-bamboo-pineapple)
 ; Does a bug run starting from any slot
-BugRun(slot:=3)
+BugRun()
 {
     FaceHive()
     RotateCamera(4)
-    (slot < 3) ? KeyPress("d", (1225 * (3 - slot))) : KeyPress("a", (1225 * (slot - 3)))
+    (hive_slot < 3) ? KeyPress("d", (1225 * (3 - hive_slot))) : KeyPress("a", (1225 * (hive_slot - 3)))
     bugrun_cooldown := A_NowUTC
 
     Menu, Tray, Icon, %A_ScriptDir%\icons\mushroom.ico
     KeyPress("w", 10000)
     KeyPress("s", 100)
-	PlaceSprinklers(1)
+	PlaceSprinklers()
     Loop, 4
     {
         Sleep, 100
@@ -357,14 +354,14 @@ BugRun(slot:=3)
     KeyPress("d", 5000)
     
     ; Walking out of the cave monsters' cave if necessary
-    ImageSearch, FoundX, FoundY, 0, A_ScreenHeight//2, A_ScreenWidth//2, A_ScreenHeight, *90 %A_ScriptDir%\images\cavemonster_cave.png
+    ImageSearch, FoundX, FoundY, 0, A_ScreenHeight//2, A_ScreenWidth//2, A_ScreenHeight, *40 %A_ScriptDir%\images\cavemonster_cave.png
     If (ErrorLevel == 0)
     {
         KeyPress("a", 5000)
     } Else {
         KeyPress("a", 200)
         Send, {s down}{a down}
-        Sleep, 1200
+        Sleep, 1200 * movespeed_factor
         Send, {s up}{a up}
         KeyPress("a", 1400)
         Menu, Tray, Icon, %A_ScriptDir%\icons\cactus.ico
@@ -381,7 +378,7 @@ BugRun(slot:=3)
     Menu, Tray, Icon, %A_ScriptDir%\icons\pumpkin.ico
     KeyPress("w", 4000)
     KeyPress("s", 300)
-	PlaceSprinklers(1)
+	PlaceSprinklers()
     Loop, 4
     {
         Sleep, 100
@@ -467,7 +464,7 @@ BugRun(slot:=3)
     KeyPress("d", 6000)
     KeyPress("a", 3000)
     KeyPress("d", 300)
-    PlaceSprinklers(1)
+    PlaceSprinklers()
     Loop, 5
     {
         Sleep, 100
@@ -482,7 +479,7 @@ BugRun(slot:=3)
     KeyPress("a", 300)
     KeyPress("s", 800)
     KeyPress("a", 1000)
-    PlaceSprinklers(1)
+    PlaceSprinklers()
     Loop, 5
     {
         Sleep, 100
@@ -526,7 +523,7 @@ BugRun(slot:=3)
     }
     
     Menu, Tray, Icon, %A_ScriptDir%\icons\bamboo.ico
-    KeyPress("w", 1500)
+    KeyPress("w", 2500)
     KeyPress("d", 5500)
     KeyPress("a", 1200)
     Sleep, 500
@@ -559,7 +556,7 @@ BugRun(slot:=3)
     KeyPress("d", 1500)
     KeyPress("w", 10000)
     KeyPress("s", 300)
-    PlaceSprinklers(1)
+    PlaceSprinklers()
     Loop, 6
     {
         Sleep, 100

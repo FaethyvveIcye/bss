@@ -15,7 +15,15 @@ Our attempt at providing a powerful & easily extensible / editable function list
 
 1. Download & Install [Autohotkey](https://www.autohotkey.com/)
 2. Download this code and it's dependencies (Code -> Download ZIP) & unzip it into a directory of your choice
-3. Browse through the comments inside `functions.ahk` to create your own macro, or take a look at the implementation in the included example `sunf +bca.ahk` for ideas or inspiration. This example macro:
+3. Edit `config.ahk` to your liking, put your sprinkler in the first slot
+4. Run the included example `sunf +bca.ahk` or any user-created file, default hotkeys are CTRL+Q to stop, and CTRL+P to play.
+
+## Troubleshooting
+- Make sure your screen resolution is at least 800x600, otherwise you may have to recapture or resize the pictures inside the `errors` and `images` folders
+- Make sure you've edited `config.ahk` & put your sprinkler in the first slot
+
+## Creating Your Own Macros
+- Browse through the comments inside `functions.ahk` to create your own macro, or take a look at the implementation in the included example `sunf +bca.ahk` for ideas or inspiration. This example macro:
     - Reconnects if disconnected
     - Activates the Wealth Clock every hour
     - Uses the free Ant Pass dispenser every 2 hours
@@ -23,4 +31,3 @@ Our attempt at providing a powerful & easily extensible / editable function list
     - Does a bug run every 60 minutes, turning in polar bear quests & killing vicious bees on the way through
       - Note: See the warnings in `functions.ahk`
     - Farms in sunflower field if it's not time to grab clock/ant/mondo/bugs
-4. Run the included example `sunf +bca.ahk` or any user-created file, default hotkeys are CTRL+Q to stop, and CTRL+P to play.

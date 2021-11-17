@@ -21,7 +21,7 @@ $^F4::		; CTRL+F4
 	Menu, Tray, Icon, %A_ScriptDir%\icons\handsome.ico
 
 	Click, Down				; collector
-	PlaceSprinklers(1)
+	PlaceSprinklers()
 
 	; initial movement to align macro
 	KeyPress("a", 400)
