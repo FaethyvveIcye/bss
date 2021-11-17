@@ -1,19 +1,13 @@
 ;; Made by Lessy / Saber
-
-; Supreme 1, Diamond 4, Golden 3, Silver 2, Basic 1
-; You should put your sprinkler in hotkey slot #1
-global sprinkler_amount := 3
-
-; 1 is closest to red cannon, 6 is closest to noob shop
-global hive_slot := 2
-
+; For sprinkler amounts, Diamond 4, Golden 3, Silver 2, and Basic / Supreme is 1
 ; Ensure the VIP is in quotation marks ("...")
-global VIP_to_reconnect_to := "https://www.roblox.com/games/1537690962?privateServerLinkCode=5086103223819209066184150466573"
+; For Hive Slots, 1 is closest to red cannon, 6 is closest to noob shop
+; You can get your movespeed from the system tab, 28 is end-game gear
 
-; Loading time to launch another BSS client
+global sprinkler_amount := 3
+global hive_slot := 2
+global VIP_to_reconnect_to := "https://www.roblox.com/games/1537690962?privateServerLinkCode=50861032238192090661841504665735"
 global seconds_to_wait_on_reconnect := 120
-
-; From the System tab, though haste-bees or not enough jump power may mess some things up, not fully implemented
 global movespeed := 28
 
 
