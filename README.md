@@ -19,8 +19,8 @@ Our attempt at providing a powerful & easily extensible / editable function list
 4. Run the included example `sunf +bca.ahk` or any user-created file, default hotkeys are CTRL+Q to stop, and CTRL+P to play.
 
 ## Troubleshooting
-- Make sure your screen resolution is at least 800x600, otherwise you may have to recapture or resize the pictures inside the `errors` and `images` folders
-- Make sure you've edited `config.ahk` & put your sprinkler in the first slot
+- Make sure your screen resolution is at least 800x600 and Windows Display Scaling is set to 100% (default), otherwise you may have to recapture or resize the pictures inside the `errors` and `images` folders
+- Make sure you have your sprinkler in the first slot, and have edited `config.ahk`
 
 ## Creating Your Own Macros
 - Browse through the comments inside `functions.ahk` to create your own macro, or take a look at the implementation in the included example `sunf +bca.ahk` for ideas or inspiration. This example macro:
