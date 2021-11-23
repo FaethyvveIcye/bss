@@ -18,19 +18,25 @@ MinutesSince(previous_time)
     Return time_difference
 }
 
-; Checks if you are connected to the game by seeing if your sprinklers on hotkey #1 are visible or not
+; Helper function that checks if you are connected to the game by seeing if your sprinklers on hotkey #1 are visible or not
 IsConnected()
 {
     ImageSearch, FoundX, FoundY, 0, A_ScreenHeight//2, A_ScreenWidth//2, A_ScreenHeight, *40 %A_ScriptDir%\images\reconnect_sprinkler.png
     Return (ErrorLevel == 0)
 }
 
-; Claims a hive slot after reconnecting to the provided (or default) URL by launching it in your default web browser
+; Helper function that claims a hive slot after reconnecting to the provided (or default) URL by launching it in your default web browser
 Reconnect()
 {
     Menu, Tray, Icon, %A_ScriptDir%\icons\connection_problems.ico
 
     Run, %VIP_to_reconnect_to%
+
+    wealthclock_cooldown := A_NowUTC
+    FormatTime, CurrentMinute, A_NowUTC, m
+    If (CurrentMinute < 16)
+        mondo_cooldown := A_NowUTC
+
     Sleep, (seconds_to_wait_on_reconnect * 1000)
 
     If !(IsConnected())
@@ -48,6 +54,13 @@ Reconnect()
     Return
 }
 
+; Reconnects to the VIP provided in `config` if disconnected
+ReconnectIfDisconnected()
+{
+    If !(IsConnected())
+        Reconnect()
+}
+
 ; Helper function to check if a bee has a BAR mutation, not fully implemented
 IsBarMutated(x, y)
 {
@@ -56,8 +69,9 @@ IsBarMutated(x, y)
 }
 
 ; Helper function to feed 50 fruits to a given bee
-Feed(x1, y1, x2, y2)
+Feed(x1, y1, x2, y2, delay:=300)
 {
+    Sleep, delay
     MouseClickDrag, Left, x1, y1, x2, y2
     Loop, 5
     {
@@ -130,13 +144,13 @@ ResetCharacter(times:=1)
 PlaceSprinklers()
 {
     RemainingSprinklers := sprinkler_amount
-    Loop,
+    Loop
     {
         KeyPress("1")
         RemainingSprinklers--
+        Sleep, 800
         If (RemainingSprinklers < 1)
             break
-        Sleep, 700
         Jump()
         Sleep, 700
     }
@@ -163,7 +177,7 @@ FaceHive()
         
         RotateCamera(4)
         Sleep, 1000
-        If (A_Index > 6)
+        If (A_Index > 7)
         {
             ResetCharacter()
             Return
@@ -172,7 +186,13 @@ FaceHive()
     RotateCamera(4)
 }
 
-; Checks to see if you're stuck in a shop / dispenser
+; Walks from the initial hiveslot to a new slot
+MoveToSlot(new_slot)
+{
+    (hive_slot < new_slot) ? KeyPress("d", (1200 * (new_slot - hive_slot))) : KeyPress("a", (1200 * (hive_slot - new_slot)))
+}
+
+; Helper function that hecks to see if you're stuck in a shop / dispenser
 IsStuck()
 {
     Loop, Files, %A_ScriptDir%\errors\shop_*.png
@@ -186,12 +206,19 @@ IsStuck()
     Return false
 }
 
-; Presses "E" to get out of a shop that you might be stuck in, then waits a little
+; Helper function that presses "E" to get out of a shop that you might be stuck in, then waits a little
 UnStick()
 {
     Sleep, 100
     KeyPress("e")
     Sleep, 1000
+}
+
+; Closes out of any shops or dispensers that you may be stuck in
+UnStickIfStuck()
+{
+    If (IsStuck())
+        UnStick()
 }
 
 ; Grabs wealth clock, then resets, skipping if on cooldown automatically
@@ -212,10 +239,11 @@ WealthClock()
     KeyPress("w", 100)
     KeyPress("w", 4000)
     KeyPress("s", 100)
+    Sleep, 500
     Jump(100)
     KeyPress("w", 1000)
     Send, {d down}
-    Sleep, 2000 * movespeed_factor
+    Sleep, 4000 * movespeed_factor
     Jump()
     Sleep, 2000 * movespeed_factor
     Jump()
@@ -269,6 +297,7 @@ AntPass()
     KeyPress("w", 1500)
     KeyPress("s", 400)
     KeyPress("a", 400)
+    Sleep, 500
     Jump()
     KeyPress("w", 2100)
     KeyPress("a", 8000)
@@ -279,8 +308,7 @@ AntPass()
         KeyPress("e")
     }
     Sleep, 1000
-    If (IsStuck())
-        UnStick()
+    UnStickIfStuck()
     ResetCharacter()
 }
 
@@ -311,6 +339,7 @@ BugRun()
     }
 
     Menu, Tray, Icon, %A_ScriptDir%\icons\spider.ico
+    Sleep, 500
     Jump()
     KeyPress("w", 4400)
     KeyPress("d", 1600)
@@ -437,9 +466,9 @@ BugRun()
     RotateCamera(3)
     KeyPress("w", 600)
     Jump()
-    KeyPress("w", 400)
+    KeyPress("w", 200)
     Jump()
-    KeyPress("w", 6000)
+    KeyPress("w", 8000)
     RotateCamera(5)
     KeyPress("a", 1500)
     Menu, Tray, Icon, %A_ScriptDir%\icons\vicious.ico
@@ -490,11 +519,12 @@ BugRun()
     }
 
     Menu, Tray, Icon, %A_ScriptDir%\icons\clover.ico
-    KeyPress("d", 2000)
-    KeyPress("w", 1500)
+    KeyPress("d", 2500)
+    KeyPress("w", 500)
+    KeyPress("s", 10)
     Sleep, 500
     Jump()
-    KeyPress("d", 2000)
+    KeyPress("d", 3000)
     Sleep, 500
     Jump()
     KeyPress("d", 2500)
@@ -565,11 +595,9 @@ BugRun()
         KeyPress("d", 800)
         KeyPress("w", 600)
     }
-    If (IsStuck())
-        UnStick()
+    UnStickIfStuck()
     ResetCharacter()
 }
-
 
 ; Automatically skips if it's not time for Mondo or it's already dead
 ; MAKE SURE YOUR COMPUTER CLOCK IS SET PROPERLY
@@ -586,6 +614,7 @@ Mondo()
     Menu, Tray, Icon, %A_ScriptDir%\icons\mondo.ico
     mondo_cooldown := A_NowUTC
 
+    ResetCharacter()    ; extra reset prevents bear morph reset glitches
     FaceHive()
     KeyPress("d", 8000)
     KeyPress("w", 1000)
@@ -628,22 +657,22 @@ Mondo()
 		If (ErrorLevel == 0)
 		{
 			; loot
-			KeyPress("a", 500)
+			KeyPress("a", 700)
             KeyPress("w", 500)
-			Loop, 6
+			Loop, 5
 			{
 				Loop, 4
 				{
-					KeyPress("s", 1200)
+					KeyPress("s", 1300)
 					KeyPress("a", 200)
-					KeyPress("w", 1200)
+					KeyPress("w", 1300)
 					KeyPress("a", 200)
 				}
 				Loop, 4
 				{
-					KeyPress("s", 1200)
+					KeyPress("s", 1300)
 					KeyPress("d", 200)
-					KeyPress("w", 1200)
+					KeyPress("w", 1300)
 					KeyPress("d", 200)
 				}
 			}
@@ -661,7 +690,454 @@ Mondo()
         MouseMove, A_ScreenWidth//2, A_ScreenHeight//2
     }
 
-    If (IsStuck())
-        UnStick()
+    UnStickIfStuck()
     ResetCharacter()
+}
+
+; Navigates to, and AFKs in, the ant challenge
+AntChallenge()
+{
+    Menu, Tray, Icon, %A_ScriptDir%\icons\ant.ico
+    FaceHive()
+    KeyPress("w", 100)
+    KeyPress("w", 700)
+    KeyPress("a", 100)
+    KeyPress("a", 8000)
+    KeyPress("w", 100)
+    KeyPress("w", 400)
+    Jump()
+    KeyPress("w", 1000)
+    Jump()
+    KeyPress("w", 1000)
+    KeyPress("d", 100)
+    KeyPress("d", 2000)
+    KeyPress("w", 1500)
+    KeyPress("s", 400)
+    KeyPress("a", 400)
+    Sleep, 500
+    Jump()
+    KeyPress("w", 2100)
+    KeyPress("a", 8000)
+    RotateCamera(7)
+	KeyPress("w", 2900)
+	KeyPress("d", 200)
+    RotateCamera(1)
+    Loop, 5
+    {
+        KeyPress("e")
+    }
+    Sleep, 1000
+    KeyPress("s", 1500)
+    KeyPress("w", 100)
+    KeyPress("d", 100)
+    PlaceSprinklers()
+    Sleep, 5 * 60 * 1000
+    UnStickIfStuck()
+}
+
+; Places sprinklers then snakes the field for pollen, optionally stopping if bag is full
+GatherFieldPollen(stop_on_full_bag:=True, vertical_length:=300, horizontal_length:=100, field_loops:=20, snakes:=4, inch_forwards:=False, inch_left:=False, inch_right:=False, inch_backwards:=False)
+{
+    PlaceSprinklers()
+    Click, Down
+    KeyPress("a", horizontal_length*snakes)
+    KeyPress("s", vertical_length/2)
+    Loop, %field_loops%
+    {
+        ; right movement
+        Loop, %snakes%
+        {
+            KeyPress("w", (inch_forwards ? vertical_length*1.03 : vertical_length))
+            KeyPress("d", (inch_right ? horizontal_length*1.03 : horizontal_length))
+            KeyPress("s", (inch_backwards ? vertical_length*1.03 : vertical_length))
+            KeyPress("d", (inch_right ? horizontal_length*1.03 : horizontal_length))
+        }
+        If (stop_on_full_bag && IsBagFull())
+            break
+
+        ; left movement
+        Loop, %snakes%
+        {
+            KeyPress("w", (inch_forwards ? vertical_length*1.03 : vertical_length))
+            KeyPress("a", (inch_left ? horizontal_length*1.03 : horizontal_length))
+            KeyPress("s", (inch_backwards ? vertical_length*1.03 : vertical_length))
+            KeyPress("a", (inch_left ? horizontal_length*1.03 : horizontal_length))
+        }
+        If (stop_on_full_bag && IsBagFull())
+            break
+
+    }
+    Click, Up
+}
+
+; Navigates to, and farms in, the bamboo field
+BambooField(field_loops:=30)
+{
+    Menu, Tray, Icon, %A_ScriptDir%\icons\bamboo.ico
+    ResetCharacter()
+    FaceHive()
+    RotateCamera(4)
+    MoveToSlot(3)
+    KeyPress("w", 10000)
+	Jump()
+    KeyPress("w", 4000)
+    KeyPress("d", 9500)
+    KeyPress("w", 1300)
+    ZoomOut(5)
+    GatherFieldPollen(True, 650, 125, field_loops, 2, True)
+    UnStickIfStuck()
+}
+
+; Navigates to, and farms in, the blue flower field
+BlueFlowerField(field_loops:=30)
+{
+    Menu, Tray, Icon, %A_ScriptDir%\icons\bluf.ico
+    ResetCharacter()
+    FaceHive()
+    RotateCamera(4)
+    MoveToSlot(3)
+    KeyPress("w", 5750)
+    KeyPress("d", 5500)
+    KeyPress("w", 2300)
+    KeyPress("d", 5200)
+    KeyPress("w", 1000)
+    ZoomOut(5)
+    GatherFieldPollen(True, 650, 125, field_loops, 2, True)
+    UnStickIfStuck()
+}
+
+; Navigates to, and farms in, the cactus field
+CactusField(field_loops:=20)
+{
+    Menu, Tray, Icon, %A_ScriptDir%\icons\cactus.ico
+    ResetCharacter()
+    FaceHive()
+    RotateCamera(4)
+    MoveToSlot(3)
+    KeyPress("w", 10000)
+	Jump()
+    KeyPress("w", 1500)
+    KeyPress("a", 4700)
+    KeyPress("s", 1000)
+    Jump()
+    KeyPress("a", 1700)
+    KeyPress("w", 6100)
+    KeyPress("d", 2500)
+    KeyPress("s", 400)
+    ZoomOut(5)
+    RotateCamera(4)
+    GatherFieldPollen(True, 300, 100, field_loops)
+    UnStickIfStuck()
+}
+
+; Navigates to, and farms in, the clover field
+CloverField(field_loops:=30)
+{
+    Menu, Tray, Icon, %A_ScriptDir%\icons\clover.ico
+    ResetCharacter()
+    FaceHive()
+    RotateCamera(4)
+    MoveToSlot(3)
+    KeyPress("w", 5750)
+    KeyPress("d", 7000)
+    KeyPress("w", 500)
+    Sleep, 500
+    Jump()
+    KeyPress("d", 2000)
+    Sleep, 500
+    Jump()
+    KeyPress("d", 2000)
+    KeyPress("s", 1000)
+    RotateCamera(4)
+    ZoomOut(5)
+    GatherFieldPollen(True, 350, 110, field_loops, 3)
+    UnStickIfStuck()
+}
+
+; Navigates to, and farms in, the coconut field
+CoconutField(field_loops:=20)
+{
+    Menu, Tray, Icon, %A_ScriptDir%\icons\coconut.ico
+    FaceHive()
+	KeyPress("d", 6969)
+	KeyPress("w", 1000)
+    Jump()
+    KeyPress("d", 4000)
+    Jump()
+    KeyPress("d", 1000)
+    KeyPress("w", 1000)
+    Jump()
+    KeyPress("w", 3000)
+    Loop, 3
+    {
+        Jump()
+        KeyPress("w", 1000)
+    }
+    KeyPress("w", 1000)
+    KeyPress("a", 1000)
+    RotateCamera(6)
+    ZoomOut(5)
+    GatherFieldPollen(True, 600, 110, field_loops, 2, True)
+    UnStickIfStuck()
+}
+
+; Navigates to, and farms in, the dandelion field
+DandelionField(field_loops:=30)
+{
+    Menu, Tray, Icon, %A_ScriptDir%\icons\dandelion.ico
+    ResetCharacter()
+    FaceHive()
+    RotateCamera(4)
+    MoveToSlot(5.5)
+    KeyPress("w", 4000)
+    ZoomOut(5)
+    GatherFieldPollen(True, 300, 100, field_loops)
+    UnStickIfStuck()
+}
+
+; Navigates to, and farms in, the mountain top field
+MountainTopField(field_loops:=20)
+{
+    Menu, Tray, Icon, %A_ScriptDir%\icons\mountain.ico
+    FaceHive()
+	KeyPress("d", 6969)
+	KeyPress("w", 1000)
+    Sleep, 6969
+    Jump()
+    KeyPress("d", 1500)
+    Loop, 5
+    {
+        KeyPress("e")
+    }
+	ZoomOut(5)
+	Sleep, 2500
+	KeyPress("w", 700)
+    RotateCamera(6)
+    GatherFieldPollen(True, 300, 110, field_loops, 4)
+    UnStickIfStuck()
+}
+
+; Navigates to, and farms in, the mushroom field
+MushroomField(field_loops:=30)
+{
+    Menu, Tray, Icon, %A_ScriptDir%\icons\mushroom.ico
+    ResetCharacter()
+    FaceHive()
+    RotateCamera(4)
+    MoveToSlot(3)
+    KeyPress("w", 7777)
+    KeyPress("d", 777)
+    ZoomOut(5)
+    GatherFieldPollen(True, 300, 100, field_loops)
+    UnStickIfStuck()
+}
+
+; Navigates to, and farms in, the pepper patch
+PepperPatch(field_loops:=20)
+{
+    Menu, Tray, Icon, %A_ScriptDir%\icons\pepper.ico
+    FaceHive()
+	KeyPress("d", 6969)
+	KeyPress("w", 1000)
+    Jump()
+    KeyPress("d", 4000)
+    Jump()
+    KeyPress("d", 1000)
+    KeyPress("w", 1000)
+    Jump()
+    KeyPress("w", 3000)
+    Loop, 3
+    {
+        Jump()
+        KeyPress("w", 1000)
+    }
+    KeyPress("w", 1000)
+    Jump()
+    KeyPress("w", 4500)
+    Sleep, 500
+    Jump()
+    KeyPress("d", 4000)
+    Sleep, 500
+    Jump()
+    KeyPress("d", 1500)
+    KeyPress("s", 500)
+    RotateCamera(6)
+    ZoomOut(5)
+    GatherFieldPollen(True, 300, 110, field_loops)
+    UnStickIfStuck()
+}
+
+; Navigates to, and farms in, the pine tree forest
+PineTreeForest(field_loops:=35)
+{
+    Menu, Tray, Icon, %A_ScriptDir%\icons\pine.ico
+    FaceHive()
+	KeyPress("d", 6969)
+	KeyPress("w", 1000)
+    Sleep, 6969
+    Jump()
+    KeyPress("d", 1500)
+    RotateCamera(6)
+    Loop, 5
+    {
+        KeyPress("e")
+    }
+	ZoomOut(5)
+	Sleep, 2500
+	KeyPress("d", 1000)
+	Send, {Space down}
+	KeyPress("w", 18000)
+	Send, {Space up}
+    Sleep, 500
+	KeyPress("a", 1337)
+	KeyPress("s", 420*2)
+    GatherFieldPollen(True, 650, 125, field_loops, 2, True)
+    UnStickIfStuck()
+}
+
+; Navigates to, and farms in, the pineapple patch
+PineapplePatch(field_loops:=25)
+{
+    Menu, Tray, Icon, %A_ScriptDir%\icons\pineapple.ico
+    FaceHive()
+	KeyPress("d", 6969)
+	KeyPress("w", 1000)
+    Jump()
+    KeyPress("d", 1500)
+    RotateCamera(2)
+    ZoomOut(5)
+    Loop, 5
+    {
+        KeyPress("e")
+    }
+	Sleep, 2500
+    KeyPress("w", 4500)
+    RotateCamera(2)
+    KeyPress("w", 1600)
+    GatherFieldPollen(True, 600, 120, field_loops, 2, True, True)
+    UnStickIfStuck()
+}
+
+; Navigates to, and farms in, the pumpkin patch
+PumpkinPatch(field_loops:=20)
+{
+    Menu, Tray, Icon, %A_ScriptDir%\icons\pumpkin.ico
+    ResetCharacter()
+    FaceHive()
+    RotateCamera(4)
+    MoveToSlot(3)
+    KeyPress("w", 10000)
+	Jump()
+    KeyPress("w", 888)
+    KeyPress("a", 4700)
+    KeyPress("s", 1000)
+    Jump()
+    KeyPress("a", 1700)
+    KeyPress("w", 6100)
+    KeyPress("d", 2300)
+    KeyPress("w", 3200)
+    ZoomOut(5)
+    GatherFieldPollen(True, 500, 120, field_loops, 3, True)
+    UnStickIfStuck()
+}
+
+; Navigates to, and farms in, the rose field
+RoseField(field_loops:=20)
+{
+    Menu, Tray, Icon, %A_ScriptDir%\icons\rose.ico
+    FaceHive()
+	KeyPress("d", 6969)
+	RotateCamera(4)
+	KeyPress("w", 4000)
+	KeyPress("s", 100)
+    Sleep, 500
+	Jump()
+	KeyPress("w", 3200)
+	RotateCamera(2)
+	KeyPress("w", 2000)
+    Jump()
+    KeyPress("w", 1200)
+    KeyPress("d", 2100)
+    RotateCamera(4)
+	ZoomOut(5)
+    GatherFieldPollen(True, 600, 110, field_loops, 2, True)
+    UnStickIfStuck()
+}
+
+; Navigates to, and farms in, the spider field
+SpiderField(field_loops:=30)
+{
+    Menu, Tray, Icon, %A_ScriptDir%\icons\spider.ico
+    ResetCharacter()
+    FaceHive()
+    RotateCamera(4)
+    MoveToSlot(3)
+    KeyPress("w", 10000)
+	Jump()
+    KeyPress("w", 4000)
+    KeyPress("d", 2600)
+    KeyPress("w", 1300)
+	ZoomOut(5)
+    GatherFieldPollen(True, 650, 125, field_loops, 2, True)
+    UnStickIfStuck()
+}
+
+; Navigates to, and farms in, the strawberry field
+StrawberryField(field_loops:=30)
+{
+    Menu, Tray, Icon, %A_ScriptDir%\icons\strawberry.ico
+    ResetCharacter()
+    FaceHive()
+    RotateCamera(4)
+    MoveToSlot(3)
+    KeyPress("w", 10000)
+	Jump()
+    KeyPress("w", 4000)
+    KeyPress("a", 4000)
+    ZoomOut(5)
+    RotateCamera(2)
+    GatherFieldPollen(True, 650, 125, field_loops, 2, True)
+    UnStickIfStuck()
+}
+
+; Navigates to, and farms in, the stump field
+StumpField(field_loops:=20)
+{
+    Menu, Tray, Icon, %A_ScriptDir%\icons\stump.ico
+    FaceHive()
+	KeyPress("d", 6969)
+	KeyPress("w", 1000)
+    Jump()
+    KeyPress("d", 1500)
+    RotateCamera(2)
+    ZoomOut(5)
+    Loop, 5
+    {
+        KeyPress("e")
+    }
+	Sleep, 2500
+    KeyPress("w", 12750)
+	Keypress("d", 500)
+    Sleep, 500
+    GatherFieldPollen(True, 300, 100, field_loops, 3)
+    UnStickIfStuck()
+}
+
+; Navigates to, and farms in, the sunflower field
+SunflowerField(field_loops:=30)
+{
+    Menu, Tray, Icon, %A_ScriptDir%\icons\sunf.ico
+    FaceHive()
+	KeyPress("d", 6969)
+	RotateCamera(4)
+	KeyPress("w", 4000)
+	KeyPress("s", 100)
+    Sleep, 500
+	Jump()
+	KeyPress("w", 3200)
+	RotateCamera(2)
+	KeyPress("w", 300)
+	ZoomOut(5)
+    GatherFieldPollen(True, 300, 100, field_loops)
+    UnStickIfStuck()
 }

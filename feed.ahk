@@ -20,11 +20,16 @@ $F1::
 	MouseGetPos, MouseX, MouseY
 	Loop
 	{
-		ImageSearch, FoundX, FoundY, 0, 0, 150, A_ScreenHeight, *40 %A_ScriptDir%\images\sunflower_seed.png
-		(ErrorLevel == 0) ? Feed(FoundX, FoundY, MouseX, MouseY) : break
 		If (BecameGifted())
 			break
+
+		ImageSearch, FoundX, FoundY, 0, 0, 150, A_ScreenHeight, *40 %A_ScriptDir%\images\sunflower_seed.png
+		If (ErrorLevel != 0)
+			break
+		
+		Feed(FoundX, FoundY, MouseX, MouseY)
 	}
+    Menu, Tray, Icon, %A_ScriptDir%\icons\basic.ico
 	MouseMove, MouseX, MouseY
 	return
 }
@@ -36,11 +41,16 @@ $F2::
 	MouseGetPos, MouseX, MouseY
 	Loop
 	{
-		ImageSearch, FoundX, FoundY, 0, 0, 150, A_ScreenHeight, *40 %A_ScriptDir%\images\strawberry.png
-		(ErrorLevel == 0) ? Feed(FoundX, FoundY, MouseX, MouseY) : break
 		If (BecameGifted())
 			break
+
+		ImageSearch, FoundX, FoundY, 0, 0, 150, A_ScreenHeight, *40 %A_ScriptDir%\images\strawberry.png
+		If (ErrorLevel != 0)
+			break
+		
+		Feed(FoundX, FoundY, MouseX, MouseY)
 	}
+    Menu, Tray, Icon, %A_ScriptDir%\icons\basic.ico
 	MouseMove, MouseX, MouseY
 	return
 }
@@ -52,11 +62,16 @@ $F3::
 	MouseGetPos, MouseX, MouseY
 	Loop
 	{
-		ImageSearch, FoundX, FoundY, 0, 0, 150, A_ScreenHeight, *40 %A_ScriptDir%\images\pineapple.png
-		(ErrorLevel == 0) ? Feed(FoundX, FoundY, MouseX, MouseY) : break
 		If (BecameGifted())
 			break
+
+		ImageSearch, FoundX, FoundY, 0, 0, 150, A_ScreenHeight, *40 %A_ScriptDir%\images\pineapple.png
+		If (ErrorLevel != 0)
+			break
+		
+		Feed(FoundX, FoundY, MouseX, MouseY)
 	}
+    Menu, Tray, Icon, %A_ScriptDir%\icons\basic.ico
 	MouseMove, MouseX, MouseY
 	return
 }
@@ -68,11 +83,16 @@ $F4::
 	MouseGetPos, MouseX, MouseY
 	Loop
 	{
-		ImageSearch, FoundX, FoundY, 0, 0, 150, A_ScreenHeight, *40 %A_ScriptDir%\images\blueberry.png
-		(ErrorLevel == 0) ? Feed(FoundX, FoundY, MouseX, MouseY) : break
 		If (BecameGifted())
 			break
+
+		ImageSearch, FoundX, FoundY, 0, 0, 150, A_ScreenHeight, *40 %A_ScriptDir%\images\blueberry.png
+		If (ErrorLevel != 0)
+			break
+		
+		Feed(FoundX, FoundY, MouseX, MouseY)
 	}
+    Menu, Tray, Icon, %A_ScriptDir%\icons\basic.ico
 	MouseMove, MouseX, MouseY
 	return
 }

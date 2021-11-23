@@ -1,5 +1,5 @@
 ;; Made by Lessy / Saber
-Menu, Tray, Tip, Any Field
+Menu, Tray, Tip, Ant Challenges
 Menu, Tray, Icon, %A_ScriptDir%\icons\basic.ico
 #MaxThreads, 8
 #MaxMem, 256
@@ -16,8 +16,9 @@ $^F11::		; CTRL+F11
 ; "Play" Hotkeys
 $^p::		; CTRL+P
 $^F4::		; CTRL+F4
+Loop, 10
 {
 	Menu, Tray, Icon, %A_ScriptDir%\icons\handsome.ico
-	GatherFieldPollen(False, 300, 100, 99999, 4)
-	Menu, Tray, Icon, %A_ScriptDir%\icons\basic.ico
+    ResetCharacter()
+    AntChallenge()
 }
