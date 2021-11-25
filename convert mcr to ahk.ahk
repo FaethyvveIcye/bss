@@ -1,4 +1,4 @@
-﻿;PLEASE READ
+;PLEASE READ
 ;the converter does not convert images
 ;This is because idfk how jitbit compiles images and how to convert them into a .png or .jpg(or other image formats)
 ;You will have to manually put the images and manage the ENDIFLABEL's before distributing
@@ -42,7 +42,7 @@ for each, line in StrSplit(FileOpen(filename, "r").Read(), "`n", "`r")
 	}
 	if(c == "IF IMAGE")
 	{
-	FileAppend,ImageSearch`,,,`0`,`0`,`A_ScreenWIdth`,`A_ScreenHeight`,`image.png `nIf(ErrorLevel == 1){goto`,`ENDIFLABEL}`n,%file%
+	FileAppend,ImageSearch`,` `,` `,` 0 `,` 0 `,` A_ScreenWIdth `,` A_ScreenHeight `,` image.png `nIf(ErrorLevel == 1){goto `,` ENDIFLABEL} `n,%file%
 	}
 	if(c == "COMMENT")
 	{
