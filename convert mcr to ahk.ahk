@@ -10,6 +10,11 @@ SetWorkingDir %A_ScriptDir%
 #SingleInstance Force
 FileSelectFile,filename
 file := "Converted.ahk"
+
+FileAppend,#include functions.ahk, %file%
+FileAppend,SendMode Input, %file%
+FileAppend,#SingleInstance force, %file%
+
 for each, line in StrSplit(FileOpen(filename, "r").Read(), "`n", "`r")
 {
 	f_ = %A_Loopfield%
@@ -21,7 +26,7 @@ for each, line in StrSplit(FileOpen(filename, "r").Read(), "`n", "`r")
 	{
 			if(a == "KeyPress")
 			{
-				FileAppend,Send`,`{%k%}`n,%file%
+				FileAppend,KeyPress(%k%)`n,%file%
 			}
 			if(a == "KeyUp")
 			{
