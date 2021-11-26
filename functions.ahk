@@ -11,6 +11,14 @@ KeyPress(key, duration:=0)
 }
 
 ; Helper function to assist in adding timers to different activities
+SecondsSince(previous_time)
+{
+    time_difference := A_NowUTC
+    EnvSub, time_difference, previous_time, Seconds
+    Return time_difference
+}
+
+; Helper function to assist in adding timers to different activities
 MinutesSince(previous_time)
 {
     time_difference := A_NowUTC
@@ -69,17 +77,22 @@ IsBarMutated(x, y)
 }
 
 ; Helper function to feed 50 fruits to a given bee
-Feed(x1, y1, x2, y2, delay:=300)
+Feed(x1, y1, x2, y2, delay:=300, only_1_treat:=false)
 {
-    Sleep, delay
     MouseClickDrag, Left, x1, y1, x2, y2
     Loop, 5
     {
         Sleep, 100
-        ImageSearch, FoundX, FoundY, 0, 0, A_ScreenWidth, A_ScreenHeight, *40 %A_ScriptDir%\images\feed_50.png
+        If (only_1_treat)
+        {
+            ImageSearch, FoundX, FoundY, 0, 0, A_ScreenWidth, A_ScreenHeight, *40 %A_ScriptDir%\images\feed_1.png
+        } Else {
+            ImageSearch, FoundX, FoundY, 0, 0, A_ScreenWidth, A_ScreenHeight, *40 %A_ScriptDir%\images\feed_50.png
+        }
         If (ErrorLevel == 0)
         {
             MouseClick, Left, FoundX, FoundY
+            Sleep, delay
             break
         }
     }
@@ -731,7 +744,11 @@ AntChallenge()
     KeyPress("w", 100)
     KeyPress("d", 100)
     PlaceSprinklers()
+    Click, Down
     Sleep, 5 * 60 * 1000
+    Click, Up
+    ResetCharacter()
+    Sleep, 8000
     UnStickIfStuck()
 }
 
@@ -739,6 +756,11 @@ AntChallenge()
 GatherFieldPollen(stop_on_full_bag:=True, vertical_length:=300, horizontal_length:=100, field_loops:=20, snakes:=4, inch_forwards:=False, inch_left:=False, inch_right:=False, inch_backwards:=False)
 {
     PlaceSprinklers()
+    Sleep, 500
+    ImageSearch, SprinklerX, SprinklerY, A_ScreenWidth//2, A_ScreenHeight//4, A_ScreenWidth, A_ScreenHeight, *90 %A_ScriptDir%\errors\you_must_be_standing_in_a_field_to_build_a_Sprinkler.png
+    If (ErrorLevel == 0)
+        Return
+
     Click, Down
     KeyPress("a", horizontal_length*snakes)
     KeyPress("s", vertical_length/2)
@@ -1002,6 +1024,7 @@ PineapplePatch(field_loops:=25)
     FaceHive()
 	KeyPress("d", 6969)
 	KeyPress("w", 1000)
+    Sleep, 6969
     Jump()
     KeyPress("d", 1500)
     RotateCamera(2)
@@ -1101,7 +1124,7 @@ StrawberryField(field_loops:=30)
 }
 
 ; Navigates to, and farms in, the stump field
-StumpField(field_loops:=20)
+StumpField(field_loops:=25)
 {
     Menu, Tray, Icon, %A_ScriptDir%\icons\stump.ico
     FaceHive()

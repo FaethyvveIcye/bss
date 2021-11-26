@@ -8,8 +8,14 @@ Our attempt at providing a powerful & easily extensible / editable function list
 - Reconnect to the game if you lost connection or the server restarted
 - Set cooldowns for any task (such as bug running every 20/30/60/any minutes, wealth clock every hour, ant pass every 2 hours)
 - Place 1-4 sprinklers, jumping as necessary automatically
-- Auto-feeding treats to bees in order to gift them `feed.ahk`
-  - Simply open your bag so you can see the fruits, mouse over your bee, and press F1 (sunflower seeds) / F2 (strawberries) / F3 (pineapples) / F4 (blueberries)
+- Auto-feeding treats to bees in order to gift & mutate them `feed.ahk`
+  - Simply open your bag so you can see the fruits, mouse over your bee, and press:
+    - F1 (sunflower seeds)
+    - F2 (strawberries)
+    - F3 (pineapples)
+    - F4 (blueberries)
+    - F5 (bitterberries until any mutation)
+    - F6 (bitterberries until BAR, please hover your mouse close to the coloured bee level for this one)
 
 ## How to Use
 
@@ -28,6 +34,6 @@ Our attempt at providing a powerful & easily extensible / editable function list
     - Activates the Wealth Clock every hour
     - Uses the free Ant Pass dispenser every 2 hours
     - Kills & loots Mondo Chick (make sure your system time is set correctly if you do this)
-    - Does a bug run every 60 minutes, turning in polar bear quests & killing vicious bees on the way through
+    - Does a bug run every 30 minutes, turning in polar bear quests & killing vicious bees on the way through
       - Note: See the warnings in `functions.ahk`
     - Farms in sunflower field if it's not time to grab clock/ant/mondo/bugs

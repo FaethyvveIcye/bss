@@ -18,6 +18,6 @@ $^p::		; CTRL+P
 $^F4::		; CTRL+F4
 {
 	Menu, Tray, Icon, %A_ScriptDir%\icons\handsome.ico
-	GatherFieldPollen(False, 300, 100, 99999, 4)
+	GatherFieldPollen(False, 300, 100, 99999, 3)
 	Menu, Tray, Icon, %A_ScriptDir%\icons\basic.ico
 }
