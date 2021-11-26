@@ -11,9 +11,9 @@ SetWorkingDir %A_ScriptDir%
 FileSelectFile,filename
 file := "Converted.ahk"
 
-FileAppend,#include functions.ahk, %file%
-FileAppend,SendMode Input, %file%
-FileAppend,#SingleInstance force, %file%
+FileAppend,#include functions.ahk `n, %file%
+FileAppend,SendMode Input 'n, %file%
+FileAppend,#NoEnv `n, %file%
 
 for each, line in StrSplit(FileOpen(filename, "r").Read(), "`n", "`r")
 {
