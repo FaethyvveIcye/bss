@@ -396,10 +396,10 @@ BugRun()
     KeyPress("d", 5000)
     
     ; Walking out of the cave monsters' cave if necessary
-    ImageSearch, FoundX, FoundY, 0, A_ScreenHeight//2, A_ScreenWidth//2, A_ScreenHeight, *40 %A_ScriptDir%\images\cavemonster_cave.png
+    ImageSearch, FoundX, FoundY, 0, A_ScreenHeight//2, A_ScreenWidth//2, A_ScreenHeight, *5 %A_ScriptDir%\images\cavemonster_cave.png
     If (ErrorLevel == 0)
     {
-        KeyPress("a", 5000)
+        KeyPress("a", 4000)
     } Else {
         KeyPress("a", 200)
         Send, {s down}{a down}
