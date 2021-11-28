@@ -52,7 +52,7 @@ Reconnect()
 
     KeyPress("w", 5000)
     KeyPress("s", 800)
-    (hive_slot < 3) ? KeyPress("d", (1225 * (3 - hive_slot))) : KeyPress("a", (1225 * (hive_slot - 3)))
+    (hive_slot < 3) ? KeyPress("d", (1200 * (3 - hive_slot))) : KeyPress("a", (1200 * (hive_slot - 3)))
     Loop, 5
     {
         KeyPress("e")
@@ -335,7 +335,7 @@ BugRun()
 {
     FaceHive()
     RotateCamera(4)
-    (hive_slot < 3) ? KeyPress("d", (1225 * (3 - hive_slot))) : KeyPress("a", (1225 * (hive_slot - 3)))
+    MoveToSlot(3)
     bugrun_cooldown := A_NowUTC
 
     Menu, Tray, Icon, %A_ScriptDir%\icons\mushroom.ico
