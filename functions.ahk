@@ -69,42 +69,6 @@ ReconnectIfDisconnected()
         Reconnect()
 }
 
-; Helper function to check if a bee has a BAR mutation, not fully implemented
-IsBarMutated(x, y)
-{
-    ImageSearch, FoundX, FoundY, x-5, y-5, x+5, y+5, %A_ScriptDir%\images\BAR.png
-    Return (ErrorLevel == 0)
-}
-
-; Helper function to feed 50 fruits to a given bee
-Feed(x1, y1, x2, y2, delay:=300, only_1_treat:=false)
-{
-    MouseClickDrag, Left, x1, y1, x2, y2
-    Loop, 5
-    {
-        Sleep, 100
-        If (only_1_treat)
-        {
-            ImageSearch, FoundX, FoundY, 0, 0, A_ScreenWidth, A_ScreenHeight, *40 %A_ScriptDir%\images\feed_1.png
-        } Else {
-            ImageSearch, FoundX, FoundY, 0, 0, A_ScreenWidth, A_ScreenHeight, *40 %A_ScriptDir%\images\feed_50.png
-        }
-        If (ErrorLevel == 0)
-        {
-            MouseClick, Left, FoundX, FoundY
-            Sleep, delay
-            break
-        }
-    }
-}
-
-; Checks the screen to see if the "Your bee became gifted!" popup happened
-BecameGifted()
-{
-    ImageSearch, FoundX, FoundY, 0, 0, A_ScreenWidth, A_ScreenHeight, *40 %A_ScriptDir%\images\gifted_success.png
-    Return (ErrorLevel == 0)
-}
-
 ; Checks to see if your bag is full
 IsBagFull()
 {
@@ -180,6 +144,7 @@ FaceHive()
         If (ErrorLevel == 0)
             break
         
+        /*
         ImageSearch, FoundX, FoundY, 0, A_ScreenHeight//2, A_ScreenWidth//2, A_ScreenHeight, *90 %A_ScriptDir%\images\hivecomb2.png
         If (ErrorLevel == 0)
             break
@@ -187,6 +152,7 @@ FaceHive()
         ImageSearch, FoundX, FoundY, 0, A_ScreenHeight//2, A_ScreenWidth//2, A_ScreenHeight, *90 %A_ScriptDir%\images\hivecomb3.png
         If (ErrorLevel == 0)
             break
+        */
         
         RotateCamera(4)
         Sleep, 1000
