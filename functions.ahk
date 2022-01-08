@@ -50,6 +50,17 @@ Reconnect()
     If !(IsConnected())
         Return Reconnect()
 
+    ; Rotating camera if we spawned in backwards, because apparently that's a thing now
+    ImageSearch, FoundX, FoundY, 0, A_ScreenHeight//2, A_ScreenWidth, A_ScreenHeight, *90 %A_ScriptDir%\images\reconnect_hiveblock.png
+    If (ErrorLevel != 0) {
+        RotateCamera(4)
+        Sleep, 1000
+        ImageSearch, FoundX, FoundY, 0, A_ScreenHeight//2, A_ScreenWidth, A_ScreenHeight, *90 %A_ScriptDir%\images\reconnect_hiveblock.png
+        If (ErrorLevel != 0) {
+            Return Reconnect()
+        }
+    }
+
     KeyPress("w", 5000)
     KeyPress("s", 800)
     (hive_slot < 3) ? KeyPress("d", (1200 * (3 - hive_slot))) : KeyPress("a", (1200 * (hive_slot - 3)))
