@@ -211,6 +211,37 @@ UnStickIfStuck()
         UnStick()
 }
 
+; Grabs wealth clock during Beesmas, then resets, skipping if on cooldown automatically
+WealthClock()
+{
+    If (MinutesSince(wealthclock_cooldown) < 60)
+        Return
+
+    Menu, Tray, Icon, %A_ScriptDir%\icons\clock.ico
+    wealthclock_cooldown := A_NowUTC
+
+    ResetCharacter(2)    ; extra reset prevents haste problems & bear morph reset glitches
+    Sleep, 5000
+
+    FaceHive()
+    RotateCamera(4)
+    Sleep, 500
+    MoveToSlot(5.5)
+    KeyPress("w", 5000)
+    RotateCamera(6)
+    Sleep, 500
+    Send, {w down}
+    Jump(17000*movespeed_factor)
+    Send, {w up}
+    Sleep, 1000
+    Loop, 20
+    {
+        KeyPress("e", 50)
+    }
+    ResetCharacter()
+}
+
+/* Non-Beesmas Pathing
 ; Grabs wealth clock, then resets, skipping if on cooldown automatically
 WealthClock()
 {
@@ -262,6 +293,7 @@ WealthClock()
     Send, {w up}
     ResetCharacter()
 }
+*/
 
 ; Grabs ant pass, then resets, skipping if on cooldown automatically
 AntPass()
