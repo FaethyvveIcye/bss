@@ -512,6 +512,7 @@ BugRun()
 
     Menu, Tray, Icon, %A_ScriptDir%\icons\sunf.ico
     KeyPress("s", 2500)
+    KeyPress("w", 50)
     KeyPress("d", 6000)
     KeyPress("a", 3000)
     KeyPress("d", 300)
