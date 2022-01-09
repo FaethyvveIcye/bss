@@ -16,5 +16,6 @@ global antpass_cooldown := 20211106000000
 global wealthclock_cooldown := 20211106000000
 global bugrun_cooldown := 20211106000000
 global mondo_cooldown := 20211106000000
+global balloon_cooldown := 20211106000000
 global movespeed_factor := 28 / movespeed
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
