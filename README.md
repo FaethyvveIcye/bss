@@ -8,6 +8,7 @@ Our attempt at providing a powerful & easily extensible / editable function list
 - Reconnect to the game if you lost connection or the server restarted
 - Set cooldowns for any task (such as bug running every 20/30/60/any minutes, wealth clock every hour, ant pass every 2 hours)
 - Place 1-4 sprinklers, jumping as necessary automatically
+- Support for emptying the hive balloon if desired
 
 ## How to Use
 
@@ -29,3 +30,4 @@ Our attempt at providing a powerful & easily extensible / editable function list
     - Does a bug run every 30 minutes, turning in polar bear quests & killing vicious bees on the way through
       - Note: See the warnings in `functions.ahk`
     - Farms in sunflower field if it's not time to grab clock/ant/mondo/bugs
+    - Empties the hive balloon if it hasn't been emptied in the last 30 minutes

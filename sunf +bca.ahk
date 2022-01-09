@@ -6,31 +6,34 @@ Menu, Tray, Icon, %A_ScriptDir%\icons\basic.ico
 #Include functions.ahk
 
 ; "Pause" Hotkeys
-$^q::		; CTRL+Q
-$^F11::		; CTRL+F11
+$^q::          ; CTRL+Q
+$^F11::        ; CTRL+F11
 {
-	Reload
-	Return
+    Reload
+    Return
 }
 
 ; "Play" Hotkeys
-$^p::		; CTRL+P
-$^F4::		; CTRL+F4
+$^p::         ; CTRL+P
+$^F4::        ; CTRL+F4
 Loop
 {
-	Menu, Tray, Icon, %A_ScriptDir%\icons\handsome.ico
-	ReconnectIfDisconnected()
+    Menu, Tray, Icon, %A_ScriptDir%\icons\handsome.ico
+    ReconnectIfDisconnected()
 
-	ResetCharacter()
+    ResetCharacter()
+
+	If (MinutesSince(balloon_cooldown) > 30)
+		EmptyHiveBalloon()
 
     WealthClock()
 
     AntPass()
 
-	Mondo()
+    Mondo()
 
-	If (MinutesSince(bugrun_cooldown) > 30)
-		BugRun()
+    If (MinutesSince(bugrun_cooldown) > 30)
+        BugRun()
 
-	SunflowerField()
+    SunflowerField()
 }

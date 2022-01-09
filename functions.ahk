@@ -211,6 +211,26 @@ UnStickIfStuck()
         UnStick()
 }
 
+; Empties the hive balloon
+EmptyHiveBalloon()
+{
+    Menu, Tray, Icon, %A_ScriptDir%\icons\balloon.ico
+    FaceHive()
+    ImageSearch, FoundX, FoundY, A_ScreenWidth//3, 0, A_ScreenWidth, A_ScreenHeight//3, *90 %A_ScriptDir%\images\can_make_honey_from_balloon.png
+    If (ErrorLevel != 0)
+        Return
+
+    KeyPress("e")
+    Loop, 300
+    {
+        Sleep, 1000
+        ImageSearch, FoundX, FoundY, A_ScreenWidth//3, 0, A_ScreenWidth, A_ScreenHeight//3, *90 %A_ScriptDir%\images\making_honey_from_balloon.png
+        If (ErrorLevel != 0)
+            Break
+    }
+    Sleep, 6000    ; Waiting for slowest converter (Fuzzy Bee) just in case
+}
+
 ; Grabs wealth clock during Beesmas, then resets, skipping if on cooldown automatically
 WealthClock()
 {
