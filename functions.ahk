@@ -370,7 +370,7 @@ BugRun()
     Menu, Tray, Icon, %A_ScriptDir%\icons\mushroom.ico
     KeyPress("w", 10000)
     KeyPress("s", 100)
-	PlaceSprinklers()
+    PlaceSprinklers()
     Loop, 4
     {
         Sleep, 100
@@ -449,7 +449,7 @@ BugRun()
     Menu, Tray, Icon, %A_ScriptDir%\icons\pumpkin.ico
     KeyPress("w", 4000)
     KeyPress("s", 300)
-	PlaceSprinklers()
+    PlaceSprinklers()
     Loop, 4
     {
         Sleep, 100
@@ -667,10 +667,10 @@ Mondo()
     {
         KeyPress("e")
     }
-	ZoomOut(5)
-	Sleep, 2200
-	KeyPress("w", 3200)
-	RotateCamera(2)
+    ZoomOut(5)
+    Sleep, 2200
+    KeyPress("w", 3200)
+    RotateCamera(2)
 
     ClickedChatOff := False
     ImageSearch, ChatX, ChatY, 0, 0, 200, 200, *90 %A_ScriptDir%\images\chat_active.png
@@ -683,48 +683,48 @@ Mondo()
         MouseMove, A_ScreenWidth//2, A_ScreenHeight//2
     }
 
-	Loop
-	{
-		/*
-		TODO: add additional death checks to ensure stability if grabbing tokens
-		Loop, 4
-		{
-			Sleep, 2800
-			KeyPress("a", 350)
-			Sleep, 350
-			KeyPress("d", 500)
-		}
-		*/
-		Sleep, 5000
-		ImageSearch, FoundX, FoundY, 0, 0, A_ScreenWidth, 120, *40 %A_ScriptDir%\images\mondobuff.png
-		If (ErrorLevel == 0)
-		{
-			; loot
-			KeyPress("a", 700)
+    Loop
+    {
+        /*
+        TODO: add additional death checks to ensure stability if grabbing tokens
+        Loop, 4
+        {
+            Sleep, 2800
+            KeyPress("a", 350)
+            Sleep, 350
+            KeyPress("d", 500)
+        }
+        */
+        Sleep, 5000
+        ImageSearch, FoundX, FoundY, 0, 0, A_ScreenWidth, 120, *40 %A_ScriptDir%\images\mondobuff.png
+        If (ErrorLevel == 0)
+        {
+            ; loot
+            KeyPress("a", 700)
             KeyPress("w", 500)
-			Loop, 5
-			{
-				Loop, 4
-				{
-					KeyPress("s", 1300)
-					KeyPress("a", 200)
-					KeyPress("w", 1300)
-					KeyPress("a", 200)
-				}
-				Loop, 4
-				{
-					KeyPress("s", 1300)
-					KeyPress("d", 200)
-					KeyPress("w", 1300)
-					KeyPress("d", 200)
-				}
-			}
-			break
-		}
-		FormatTime, CurrentMinute, A_NowUTC, m
-		If (CurrentMinute >= 15)
-			break
-	}
+            Loop, 5
+            {
+                Loop, 4
+                {
+                    KeyPress("s", 1300)
+                    KeyPress("a", 200)
+                    KeyPress("w", 1300)
+                    KeyPress("a", 200)
+                }
+                Loop, 4
+                {
+                    KeyPress("s", 1300)
+                    KeyPress("d", 200)
+                    KeyPress("w", 1300)
+                    KeyPress("d", 200)
+                }
+            }
+            break
+        }
+        FormatTime, CurrentMinute, A_NowUTC, m
+        If (CurrentMinute >= 15)
+            break
+    }
 
     If (ClickedChatOff) {
         MouseMove, ChatX, ChatY
@@ -762,8 +762,8 @@ AntChallenge()
     KeyPress("w", 2100)
     KeyPress("a", 8000)
     RotateCamera(7)
-	KeyPress("w", 2900)
-	KeyPress("d", 200)
+    KeyPress("w", 2900)
+    KeyPress("d", 200)
     RotateCamera(1)
     Loop, 5
     {
@@ -831,7 +831,7 @@ BambooField(field_loops:=30)
     RotateCamera(4)
     MoveToSlot(3)
     KeyPress("w", 10000)
-	Jump()
+    Jump()
     KeyPress("w", 4000)
     KeyPress("d", 9500)
     KeyPress("w", 1300)
@@ -867,7 +867,7 @@ CactusField(field_loops:=20)
     RotateCamera(4)
     MoveToSlot(3)
     KeyPress("w", 10000)
-	Jump()
+    Jump()
     KeyPress("w", 1500)
     KeyPress("a", 4700)
     KeyPress("s", 1000)
@@ -911,8 +911,8 @@ CoconutField(field_loops:=20)
 {
     Menu, Tray, Icon, %A_ScriptDir%\icons\coconut.ico
     FaceHive()
-	KeyPress("d", 6969)
-	KeyPress("w", 1000)
+    KeyPress("d", 6969)
+    KeyPress("w", 1000)
     Jump()
     KeyPress("d", 4000)
     Jump()
@@ -952,8 +952,8 @@ MountainTopField(field_loops:=20)
 {
     Menu, Tray, Icon, %A_ScriptDir%\icons\mountain.ico
     FaceHive()
-	KeyPress("d", 6969)
-	KeyPress("w", 1000)
+    KeyPress("d", 6969)
+    KeyPress("w", 1000)
     Sleep, 6969
     Jump()
     KeyPress("d", 1500)
@@ -961,9 +961,9 @@ MountainTopField(field_loops:=20)
     {
         KeyPress("e")
     }
-	ZoomOut(5)
-	Sleep, 2500
-	KeyPress("w", 700)
+    ZoomOut(5)
+    Sleep, 2500
+    KeyPress("w", 700)
     RotateCamera(6)
     GatherFieldPollen(True, 300, 110, field_loops, 4)
     UnStickIfStuck()
@@ -989,8 +989,8 @@ PepperPatch(field_loops:=20)
 {
     Menu, Tray, Icon, %A_ScriptDir%\icons\pepper.ico
     FaceHive()
-	KeyPress("d", 6969)
-	KeyPress("w", 1000)
+    KeyPress("d", 6969)
+    KeyPress("w", 1000)
     Jump()
     KeyPress("d", 4000)
     Jump()
@@ -1024,8 +1024,8 @@ PineTreeForest(field_loops:=35)
 {
     Menu, Tray, Icon, %A_ScriptDir%\icons\pine.ico
     FaceHive()
-	KeyPress("d", 6969)
-	KeyPress("w", 1000)
+    KeyPress("d", 6969)
+    KeyPress("w", 1000)
     Sleep, 6969
     Jump()
     KeyPress("d", 1500)
@@ -1034,15 +1034,15 @@ PineTreeForest(field_loops:=35)
     {
         KeyPress("e")
     }
-	ZoomOut(5)
-	Sleep, 2500
-	KeyPress("d", 1000)
-	Send, {Space down}
-	KeyPress("w", 18000)
-	Send, {Space up}
+    ZoomOut(5)
+    Sleep, 2500
+    KeyPress("d", 1000)
+    Send, {Space down}
+    KeyPress("w", 18000)
+    Send, {Space up}
     Sleep, 500
-	KeyPress("a", 1337)
-	KeyPress("s", 420*2)
+    KeyPress("a", 1337)
+    KeyPress("s", 420*2)
     GatherFieldPollen(True, 650, 125, field_loops, 2, True)
     UnStickIfStuck()
 }
@@ -1052,8 +1052,8 @@ PineapplePatch(field_loops:=25)
 {
     Menu, Tray, Icon, %A_ScriptDir%\icons\pineapple.ico
     FaceHive()
-	KeyPress("d", 6969)
-	KeyPress("w", 1000)
+    KeyPress("d", 6969)
+    KeyPress("w", 1000)
     Sleep, 6969
     Jump()
     KeyPress("d", 1500)
@@ -1063,7 +1063,7 @@ PineapplePatch(field_loops:=25)
     {
         KeyPress("e")
     }
-	Sleep, 2500
+    Sleep, 2500
     KeyPress("w", 4500)
     RotateCamera(2)
     KeyPress("w", 1600)
@@ -1080,7 +1080,7 @@ PumpkinPatch(field_loops:=20)
     RotateCamera(4)
     MoveToSlot(3)
     KeyPress("w", 10000)
-	Jump()
+    Jump()
     KeyPress("w", 888)
     KeyPress("a", 4700)
     KeyPress("s", 1000)
@@ -1099,20 +1099,20 @@ RoseField(field_loops:=20)
 {
     Menu, Tray, Icon, %A_ScriptDir%\icons\rose.ico
     FaceHive()
-	KeyPress("d", 6969)
-	RotateCamera(4)
-	KeyPress("w", 4000)
-	KeyPress("s", 100)
+    KeyPress("d", 6969)
+    RotateCamera(4)
+    KeyPress("w", 4000)
+    KeyPress("s", 100)
     Sleep, 500
-	Jump()
-	KeyPress("w", 3200)
-	RotateCamera(2)
-	KeyPress("w", 2000)
+    Jump()
+    KeyPress("w", 3200)
+    RotateCamera(2)
+    KeyPress("w", 2000)
     Jump()
     KeyPress("w", 1200)
     KeyPress("d", 2100)
     RotateCamera(4)
-	ZoomOut(5)
+    ZoomOut(5)
     GatherFieldPollen(True, 600, 110, field_loops, 2, True)
     UnStickIfStuck()
 }
@@ -1126,11 +1126,11 @@ SpiderField(field_loops:=30)
     RotateCamera(4)
     MoveToSlot(3)
     KeyPress("w", 10000)
-	Jump()
+    Jump()
     KeyPress("w", 4000)
     KeyPress("d", 2600)
     KeyPress("w", 1300)
-	ZoomOut(5)
+    ZoomOut(5)
     GatherFieldPollen(True, 650, 125, field_loops, 2, True)
     UnStickIfStuck()
 }
@@ -1144,7 +1144,7 @@ StrawberryField(field_loops:=30)
     RotateCamera(4)
     MoveToSlot(3)
     KeyPress("w", 10000)
-	Jump()
+    Jump()
     KeyPress("w", 4000)
     KeyPress("a", 4000)
     ZoomOut(5)
@@ -1158,8 +1158,8 @@ StumpField(field_loops:=25)
 {
     Menu, Tray, Icon, %A_ScriptDir%\icons\stump.ico
     FaceHive()
-	KeyPress("d", 6969)
-	KeyPress("w", 1000)
+    KeyPress("d", 6969)
+    KeyPress("w", 1000)
     Jump()
     KeyPress("d", 1500)
     RotateCamera(2)
@@ -1168,9 +1168,9 @@ StumpField(field_loops:=25)
     {
         KeyPress("e")
     }
-	Sleep, 2500
+    Sleep, 2500
     KeyPress("w", 12750)
-	Keypress("d", 500)
+    Keypress("d", 500)
     Sleep, 500
     GatherFieldPollen(True, 300, 100, field_loops, 3)
     UnStickIfStuck()
@@ -1181,16 +1181,16 @@ SunflowerField(field_loops:=30)
 {
     Menu, Tray, Icon, %A_ScriptDir%\icons\sunf.ico
     FaceHive()
-	KeyPress("d", 6969)
-	RotateCamera(4)
-	KeyPress("w", 4000)
-	KeyPress("s", 100)
+    KeyPress("d", 6969)
+    RotateCamera(4)
+    KeyPress("w", 4000)
+    KeyPress("s", 100)
     Sleep, 500
-	Jump()
-	KeyPress("w", 3200)
-	RotateCamera(2)
-	KeyPress("w", 300)
-	ZoomOut(5)
+    Jump()
+    KeyPress("w", 3200)
+    RotateCamera(2)
+    KeyPress("w", 300)
+    ZoomOut(5)
     GatherFieldPollen(True, 300, 100, field_loops)
     UnStickIfStuck()
 }
