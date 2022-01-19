@@ -182,7 +182,12 @@ FaceHive()
         If (A_Index > 7)
         {
             ResetCharacter()
-            Return
+        }
+
+        ; client crashed
+        If (A_Index > 28)
+        {
+            Reconnect()
         }
     }
     RotateCamera(4)
@@ -214,6 +219,8 @@ UnStick()
     Sleep, 100
     KeyPress("e")
     Sleep, 1000
+    If (IsStuck())
+        Reconnect()
 }
 
 ; Closes out of any shops or dispensers that you may be stuck in
