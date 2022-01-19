@@ -224,7 +224,7 @@ UnStickIfStuck()
 }
 
 ; Empties the hive balloon
-EmptyHiveBalloon()
+EmptyHiveBalloon(reset_after_emptying:=true)
 {
     Menu, Tray, Icon, %A_ScriptDir%\icons\balloon.ico
     FaceHive()
@@ -240,6 +240,9 @@ EmptyHiveBalloon()
         If (ErrorLevel != 0)
             Break
     }
+
+    If (%reset_after_emptying%)
+        ResetCharacter()
 }
 
 ; Grabs wealth clock during Beesmas, then resets, skipping if on cooldown automatically
