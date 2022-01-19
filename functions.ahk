@@ -33,15 +33,6 @@ IsConnected()
     Return (ErrorLevel == 0)
 }
 
-; Doesn't actually work right now as this small checked image is found not only on the frozen dead HP Bar, will need adjustments
-; Helper function that checks if your client is hung-up and frozen (usually because of not relaunching / server not resetting for 24+ hours)
-IsFrozen()
-{
-    ; ImageSearch, FoundX, FoundY, A_ScreenWidth//2, 0, A_ScreenWidth//2, A_ScreenHeight//8, %A_ScriptDir%\images\reconnect_frozen.png
-    ; Return (ErrorLevel != 0)
-    Return False
-}
-
 ; Helper function that claims a hive slot after reconnecting to the provided (or default) URL by launching it in your default web browser
 Reconnect()
 {
@@ -86,9 +77,6 @@ Reconnect()
 ReconnectIfDisconnected()
 {
     If !(IsConnected())
-        Return Reconnect()
-    
-    If (IsFrozen())
         Return Reconnect()
 }
 
@@ -184,7 +172,7 @@ FaceHive()
             ResetCharacter()
         }
 
-        ; client crashed
+        ; client crashed or frozen
         If (A_Index > 28)
         {
             Reconnect()
