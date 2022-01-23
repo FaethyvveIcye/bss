@@ -187,7 +187,7 @@ MoveToSlot(new_slot)
     (hive_slot < new_slot) ? KeyPress("d", (1200 * (new_slot - hive_slot))) : KeyPress("a", (1200 * (hive_slot - new_slot)))
 }
 
-; Helper function that hecks to see if you're stuck in a shop / dispenser
+; Helper function that checks to see if you're stuck in a shop / dispenser
 IsStuck()
 {
     Loop, Files, %A_ScriptDir%\errors\shop_*.png
@@ -201,7 +201,7 @@ IsStuck()
     Return false
 }
 
-; Helper function that presses "E" to get out of a shop that you might be stuck in, then waits a little
+; Helper function that presses "E" to get out of a shop that you might be stuck in, then waits for the shop UI to close
 UnStick()
 {
     Sleep, 100
@@ -541,7 +541,7 @@ BugRun()
 
     Menu, Tray, Icon, %A_ScriptDir%\icons\sunf.ico
     KeyPress("s", 2500)
-    KeyPress("w", 50)
+    KeyPress("w", 100)
     KeyPress("d", 6000)
     KeyPress("a", 3000)
     KeyPress("d", 300)
