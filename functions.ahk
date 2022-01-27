@@ -145,46 +145,46 @@ PlaceSprinklers()
 }
 
 ; Rotates the camera to face your hive (ie. looking at all your bees)
-FaceHive()
+FaceHive(should_face_hive:=true)
 {
-    Loop
+    Loop, 4
     {
-        ; checks bottom-left quadrant of screen for sprinkler on hivecomb background
-        ; for a full-screen check, change co-ordinates to: 0, 0, A_ScreenWidth, A_ScreenHeight
-        ImageSearch, FoundX, FoundY, 0, A_ScreenHeight//2, A_ScreenWidth//2, A_ScreenHeight, *90 %A_ScriptDir%\images\hivecomb.png
-        If (ErrorLevel == 0)
-            break
-        
-        /*
-        ImageSearch, FoundX, FoundY, 0, A_ScreenHeight//2, A_ScreenWidth//2, A_ScreenHeight, *90 %A_ScriptDir%\images\hivecomb2.png
-        If (ErrorLevel == 0)
-            break
-        
-        ImageSearch, FoundX, FoundY, 0, A_ScreenHeight//2, A_ScreenWidth//2, A_ScreenHeight, *90 %A_ScriptDir%\images\hivecomb3.png
-        If (ErrorLevel == 0)
-            break
-        */
-        
-        RotateCamera(4)
-        Sleep, 1000
-        If (A_Index > 7)
+        Loop, 7
         {
-            ResetCharacter()
+            ; checks bottom-left quadrant of screen for sprinkler on hivecomb background
+            ; for a full-screen check, change co-ordinates to: 0, 0, A_ScreenWidth, A_ScreenHeight
+            ImageSearch, FoundX, FoundY, 0, A_ScreenHeight//2, A_ScreenWidth//2, A_ScreenHeight, *90 %A_ScriptDir%\images\hivecomb.png
+            If (ErrorLevel == 0)
+            {
+                If(should_face_hive)
+                    RotateCamera(4)
+                Return
+            }
+            
+            /*
+            ImageSearch, FoundX, FoundY, 0, A_ScreenHeight//2, A_ScreenWidth//2, A_ScreenHeight, *90 %A_ScriptDir%\images\hivecomb2.png
+            If (ErrorLevel == 0)
+                break
+            
+            ImageSearch, FoundX, FoundY, 0, A_ScreenHeight//2, A_ScreenWidth//2, A_ScreenHeight, *90 %A_ScriptDir%\images\hivecomb3.png
+            If (ErrorLevel == 0)
+                break
+            */
+            
+            RotateCamera(4)
+            Sleep, 1000
         }
-
-        ; client crashed or frozen
-        If (A_Index > 28)
-        {
-            Reconnect()
-        }
+        ResetCharacter()
     }
-    RotateCamera(4)
+    ; Client crashed or frozen
+    Reconnect()
 }
 
-; Walks from the initial hiveslot to a new slot
+; Walks from the initial hiveslot to a new slot, assuming facing away from the hive
 MoveToSlot(new_slot)
 {
-    (hive_slot < new_slot) ? KeyPress("d", (1200 * (new_slot - hive_slot))) : KeyPress("a", (1200 * (hive_slot - new_slot)))
+    distance_between_slots := 1200
+    (hive_slot < new_slot) ? KeyPress("d", (distance_between_slots * (new_slot - hive_slot))) : KeyPress("a", (distance_between_slots * (hive_slot - new_slot)))
 }
 
 ; Helper function that checks to see if you're stuck in a shop / dispenser
@@ -236,8 +236,48 @@ EmptyHiveBalloon(reset_after_emptying:=true)
             Break
     }
 
-    If (%reset_after_emptying%)
+    If (reset_after_emptying)
         ResetCharacter()
+}
+
+; Uses a Whirligig or resets if it's on cooldown
+WhirligigOrReset()
+{
+    If (MinutesSince(whirligig_cooldown) > 5)
+    {
+        KeyPress(whirligig_hotkey_bind)
+        whirligig_cooldown := A_NowUTC
+    } Else {
+        ResetCharacter()
+    }
+}
+
+CircleForLoot(circles:=5, repeats:=0)
+{
+    loot_movement_amount := 100
+    Loop, %circles%
+    {
+        KeyPress("w", loot_movement_amount/2)
+        KeyPress("d", loot_movement_amount)
+        KeyPress("s", loot_movement_amount)
+        KeyPress("a", loot_movement_amount)
+        KeyPress("w", loot_movement_amount/2)
+        loot_movement_amount += 100
+    }
+    If (repeats > 0)
+    {
+        Loop, %circles%
+        {
+            loot_movement_amount -= 100
+            KeyPress("w", loot_movement_amount/2)
+            KeyPress("d", loot_movement_amount)
+            KeyPress("s", loot_movement_amount)
+            KeyPress("a", loot_movement_amount)
+            KeyPress("w", loot_movement_amount/2)
+        }
+        new_repeats := repeats - 1
+        CircleForLoot(circles, new_repeats)
+    }
 }
 
 ; Grabs wealth clock during Beesmas, then resets, skipping if on cooldown automatically
@@ -249,11 +289,8 @@ WealthClock()
     Menu, Tray, Icon, %A_ScriptDir%\icons\clock.ico
     wealthclock_cooldown := A_NowUTC
 
-    ResetCharacter(2)    ; extra reset prevents haste problems & bear morph reset glitches
-    Sleep, 5000
-
-    FaceHive()
-    RotateCamera(4)
+    ResetCharacter(3)    ; extra resets prevent haste problems & bear morph reset glitches
+    FaceHive(false)
     Sleep, 500
     MoveToSlot(5.5)
     KeyPress("w", 5000)
@@ -279,8 +316,7 @@ WealthClock()
 
     Menu, Tray, Icon, %A_ScriptDir%\icons\clock.ico
     wealthclock_cooldown := A_NowUTC
-    FaceHive()
-    RotateCamera(4)
+    FaceHive(false)
     Sleep, 500
     KeyPress("s", 100)
     KeyPress("s", 700)
@@ -363,7 +399,17 @@ AntPass()
     ResetCharacter()
 }
 
-; Enough Jump Power & Movement Speed required (gummy boots / clogs / mountaintop)
+; Plays Memory Match - not yet impelmented
+MemoryMatch()
+{
+    ; 5.1 Memory Match          2 hours
+    ; 5.2 Mega Memory Match     4 hours
+    ; 5.3 Night Memory Match    8 hours - only at night
+    ; 5.4 Extreme Memory Match  8 hours
+    ; 5.5 Winter Memory Match   4 hours
+}
+
+; Enough Jump Power required (gummy boots / clogs / mountaintop)
 ; Too many haste token bees / bear bee can cause runs where bugs or fields are missed
 ; Walks in a pattern conducive to activating vicious spikes in applicable fields
 ; Grabs some pollen in Polar Bear's quest fields on the way through & turns in Polar quests
@@ -371,8 +417,7 @@ AntPass()
 ; Does a bug run starting from any slot
 BugRun()
 {
-    FaceHive()
-    RotateCamera(4)
+    FaceHive(false)
     MoveToSlot(3)
     bugrun_cooldown := A_NowUTC
 
@@ -484,9 +529,9 @@ BugRun()
     }
 
     Menu, Tray, Icon, %A_ScriptDir%\icons\polar.ico
-    KeyPress("w", 1000)
+    KeyPress("w", 2000)
     KeyPress("d", 12000)
-    KeyPress("s", 9000)
+    KeyPress("s", 6969)
     KeyPress("a", 1200)
     RotateCamera(7)
     KeyPress("w", 400)
@@ -666,7 +711,7 @@ Mondo()
     Menu, Tray, Icon, %A_ScriptDir%\icons\mondo.ico
     mondo_cooldown := A_NowUTC
 
-    ResetCharacter()    ; extra reset prevents bear morph reset glitches
+    ResetCharacter(2)    ; extra resets prevent bear morph reset glitches
     FaceHive()
     KeyPress("d", 8000)
     KeyPress("w", 1000)
@@ -791,9 +836,123 @@ AntChallenge()
     UnStickIfStuck()
 }
 
+; Navigates to, activates, and collects the items from, Brown Bear's Stockings
+Stockings()
+{
+    ResetCharacter(3)
+    FaceHive(false)
+    Sleep, 500
+    MoveToSlot(5.5)
+    KeyPress("w", 4000)
+    RotateCamera(6)
+    Sleep, 500
+    KeyPress("w", 6000)
+    KeyPress("d", 500)
+    Sleep, 100
+    Jump()
+    KeyPress("w", 5000)
+    Loop, 5
+    {
+        KeyPress("e", 50)
+    }
+    KeyPress("w", 1000)
+    KeyPress("d", 350)
+    KeyPress("s", 1500)
+}
+
+; Navigates to, digs in to, and collects the yummies from, Polar Bear's Beesmas Feast
+BeesmasFeast()
+{
+    ResetCharacter(3)
+    FaceHive(false)
+    MoveToSlot(0)
+    KeyPress("s", 1000)
+    Jump()
+    KeyPress("a", 1500)
+    Loop, 5
+    {
+        KeyPress("e")
+    }
+    Sleep, 700
+    Jump()
+    Jump()
+    Sleep, 3500
+    Keypress("a", 5500)
+    KeyPress("w", 500)
+    Keypress("d", 150)
+    KeyPress("s", 100)
+    Sleep, 100
+    Jump()
+    KeyPress("w", 900)
+    Loop, 5
+    {
+        KeyPress("e", 50)
+    }
+    Sleep, 1500
+    CircleForLoot()
+}
+
+; Navigates to, heats up, and collects the loot from, Dapper Bear's Samovar
+Samovar()
+{
+    ResetCharacter(2)
+    FaceHive()
+    ; get there
+    KeyPress("e")
+    Sleep, 1500
+    CircleForLoot()
+}
+
+; Navigates to, ganders at, and collects the goodies from, Onett's Lid Art
+LidArt()
+{
+    ResetCharacter(3)
+    FaceHive(false)
+    MoveToSlot(0)
+    KeyPress("s", 1000)
+    Jump()
+    KeyPress("a", 1500)
+    Loop, 5
+    {
+        KeyPress("e")
+    }
+    Sleep, 2500
+    KeyPress("w", 2000)
+    KeyPress("a", 2500)
+    KeyPress("d", 475)
+    KeyPress("w", 7000)
+    Sleep, 100
+    Jump()
+    KeyPress("w", 4000)
+    Sleep, 100
+    Jump()
+    KeyPress("w", 300)
+    Sleep, 1000
+    Loop, 5
+    {
+        KeyPress("e", 50)
+    }
+    Sleep, 3000
+    CircleForLoot()
+}
+
+; Navigates to, admires, and collects the wax from, Riley Bee's Honeyday Candles
+HoneydayCandles()
+{
+    ResetCharacter(2)
+    FaceHive()
+    ; get there
+    KeyPress("e")
+    Sleep, 2000
+    ; collect loot
+}
+
 ; Places sprinklers then snakes the field for pollen, optionally stopping if bag is full
 GatherFieldPollen(stop_on_full_bag:=True, vertical_length:=300, horizontal_length:=100, field_loops:=20, snakes:=4, inch_forwards:=False, inch_left:=False, inch_right:=False, inch_backwards:=False)
 {
+    If (%field_loops% == 0)
+        Return
+
     PlaceSprinklers()
     Sleep, 500
     ImageSearch, SprinklerX, SprinklerY, A_ScreenWidth//2, A_ScreenHeight//4, A_ScreenWidth, A_ScreenHeight, *90 %A_ScriptDir%\errors\you_must_be_standing_in_a_field_to_build_a_Sprinkler.png
@@ -836,8 +995,7 @@ BambooField(field_loops:=30)
 {
     Menu, Tray, Icon, %A_ScriptDir%\icons\bamboo.ico
     ResetCharacter()
-    FaceHive()
-    RotateCamera(4)
+    FaceHive(false)
     MoveToSlot(3)
     KeyPress("w", 10000)
     Jump()
@@ -854,8 +1012,7 @@ BlueFlowerField(field_loops:=30)
 {
     Menu, Tray, Icon, %A_ScriptDir%\icons\bluf.ico
     ResetCharacter()
-    FaceHive()
-    RotateCamera(4)
+    FaceHive(false)
     MoveToSlot(3)
     KeyPress("w", 5750)
     KeyPress("d", 5500)
@@ -872,8 +1029,7 @@ CactusField(field_loops:=20)
 {
     Menu, Tray, Icon, %A_ScriptDir%\icons\cactus.ico
     ResetCharacter()
-    FaceHive()
-    RotateCamera(4)
+    FaceHive(false)
     MoveToSlot(3)
     KeyPress("w", 10000)
     Jump()
@@ -896,8 +1052,7 @@ CloverField(field_loops:=30)
 {
     Menu, Tray, Icon, %A_ScriptDir%\icons\clover.ico
     ResetCharacter()
-    FaceHive()
-    RotateCamera(4)
+    FaceHive(false)
     MoveToSlot(3)
     KeyPress("w", 5750)
     KeyPress("d", 7000)
@@ -947,8 +1102,7 @@ DandelionField(field_loops:=30)
 {
     Menu, Tray, Icon, %A_ScriptDir%\icons\dandelion.ico
     ResetCharacter()
-    FaceHive()
-    RotateCamera(4)
+    FaceHive(false)
     MoveToSlot(5.5)
     KeyPress("w", 4000)
     ZoomOut(5)
@@ -983,8 +1137,7 @@ MushroomField(field_loops:=30)
 {
     Menu, Tray, Icon, %A_ScriptDir%\icons\mushroom.ico
     ResetCharacter()
-    FaceHive()
-    RotateCamera(4)
+    FaceHive(false)
     MoveToSlot(3)
     KeyPress("w", 7777)
     KeyPress("d", 777)
@@ -1085,8 +1238,7 @@ PumpkinPatch(field_loops:=20)
 {
     Menu, Tray, Icon, %A_ScriptDir%\icons\pumpkin.ico
     ResetCharacter()
-    FaceHive()
-    RotateCamera(4)
+    FaceHive(false)
     MoveToSlot(3)
     KeyPress("w", 10000)
     Jump()
@@ -1131,8 +1283,7 @@ SpiderField(field_loops:=30)
 {
     Menu, Tray, Icon, %A_ScriptDir%\icons\spider.ico
     ResetCharacter()
-    FaceHive()
-    RotateCamera(4)
+    FaceHive(false)
     MoveToSlot(3)
     KeyPress("w", 10000)
     Jump()
@@ -1149,8 +1300,7 @@ StrawberryField(field_loops:=30)
 {
     Menu, Tray, Icon, %A_ScriptDir%\icons\strawberry.ico
     ResetCharacter()
-    FaceHive()
-    RotateCamera(4)
+    FaceHive(false)
     MoveToSlot(3)
     KeyPress("w", 10000)
     Jump()

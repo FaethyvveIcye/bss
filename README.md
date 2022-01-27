@@ -14,7 +14,7 @@ Our attempt at providing a powerful & easily extensible / editable function list
 
 1. Download & Install [Autohotkey](https://www.autohotkey.com/)
 2. Download this code and it's dependencies (Code -> Download ZIP) & unzip it into a directory of your choice
-3. Edit `config.ahk` to your liking, put your sprinkler in the first slot
+3. Edit `config.ahk` to your liking, put your sprinkler in the first slot of your hotbar ingame
 4. Run the included example `sunf +bca.ahk` or any user-created file, default hotkeys are CTRL+Q to stop, and CTRL+P to play.
 
 ## Troubleshooting
