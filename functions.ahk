@@ -896,10 +896,38 @@ BeesmasFeast()
 Samovar()
 {
     ResetCharacter(2)
-    FaceHive()
-    ; get there
-    KeyPress("e")
-    Sleep, 1500
+    FaceHive(false)
+    MoveToSlot(0)
+    KeyPress("s", 1000)
+    Jump()
+    KeyPress("a", 1500)
+    RotateCamera(6)
+    Loop, 5
+    {
+        KeyPress("e")
+    }
+    Sleep, 2500
+    KeyPress("w", 12400)
+    RotateCamera(2)
+    KeyPress("w", 4000)
+    KeyPress("s", 100)
+    Sleep, 100
+    Jump()
+    KeyPress("w", 2000)
+    KeyPress("s", 100)
+    Sleep, 100
+    Jump()
+    KeyPress("w", 2000)
+    RotateCamera(7)
+    KeyPress("s", 100)
+    Sleep, 100
+    Jump()
+    KeyPress("w", 900)
+    Loop, 5
+    {
+        KeyPress("e", 50)
+    }
+    Sleep, 3000
     CircleForLoot()
 }
 
