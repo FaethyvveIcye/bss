@@ -241,12 +241,14 @@ EmptyHiveBalloon(reset_after_emptying:=true)
 }
 
 ; Uses a Whirligig or resets if it's on cooldown
-WhirligigOrReset()
+WhirligigOrReset(camera_rotations:=0)
 {
     If (MinutesSince(whirligig_cooldown) > 5)
     {
         KeyPress(whirligig_hotkey_bind)
         whirligig_cooldown := A_NowUTC
+        RotateCamera(camera_rotations)
+        Sleep, 1000
     } Else {
         ResetCharacter()
     }
