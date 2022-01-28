@@ -836,9 +836,12 @@ AntChallenge()
     UnStickIfStuck()
 }
 
-; Navigates to, activates, and collects the items from, Brown Bear's Stockings
+; Navigates to, checks inside, and collects the items from, Brown Bear's Stockings
 Stockings()
 {
+    Menu, Tray, Icon, %A_ScriptDir%\icons\brown_bear.ico
+    stockings_cooldown := A_NowUTC
+
     ResetCharacter(3)
     FaceHive(false)
     Sleep, 500
@@ -863,6 +866,9 @@ Stockings()
 ; Navigates to, digs in to, and collects the yummies from, Polar Bear's Beesmas Feast
 BeesmasFeast()
 {
+    Menu, Tray, Icon, %A_ScriptDir%\icons\polar_bear.ico
+    beesmas_feast_cooldown := A_NowUTC
+
     ResetCharacter(3)
     FaceHive(false)
     MoveToSlot(0)
@@ -895,6 +901,9 @@ BeesmasFeast()
 ; Navigates to, heats up, and collects the loot from, Dapper Bear's Samovar
 Samovar()
 {
+    Menu, Tray, Icon, %A_ScriptDir%\icons\dapper_bear.ico
+    samovar_cooldown := A_NowUTC
+    
     ResetCharacter(2)
     FaceHive(false)
     MoveToSlot(0)
@@ -934,6 +943,9 @@ Samovar()
 ; Navigates to, ganders at, and collects the goodies from, Onett's Lid Art
 LidArt()
 {
+    Menu, Tray, Icon, %A_ScriptDir%\icons\onett.ico
+    lid_art_cooldown := A_NowUTC
+    
     ResetCharacter(3)
     FaceHive(false)
     MoveToSlot(0)
@@ -967,6 +979,9 @@ LidArt()
 ; Navigates to, admires, and collects the wax from, Riley Bee's Honeyday Candles
 HoneydayCandles()
 {
+    Menu, Tray, Icon, %A_ScriptDir%\icons\riley.ico
+    honeyday_candles_cooldown := A_NowUTC
+
     ResetCharacter(2)
     FaceHive(false)
     MoveToSlot(0)
