@@ -940,11 +940,28 @@ LidArt()
 HoneydayCandles()
 {
     ResetCharacter(2)
-    FaceHive()
-    ; get there
-    KeyPress("e")
-    Sleep, 2000
-    ; collect loot
+    FaceHive(false)
+    MoveToSlot(0)
+    KeyPress("w", 4000)
+    KeyPress("s", 100)
+    Sleep, 100
+    Jump()
+    KeyPress("w", 1000)
+    RotateCamera(2)
+    KeyPress("w", 2000)
+    KeyPress("a", 1000)
+    KeyPress("d", 1000)
+    KeyPress("s", 100)
+    Sleep, 100
+    Jump()
+    KeyPress("w", 4200)
+    KeyPress("a", 3350)
+    KeyPress("w", 2000)
+    Loop, 5
+    {
+        KeyPress("e", 50)
+    }
+    Sleep, 5000
 }
 
 ; Places sprinklers then snakes the field for pollen, optionally stopping if bag is full
