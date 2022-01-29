@@ -838,9 +838,117 @@ AntChallenge()
     UnStickIfStuck()
 }
 
+; Navigates to and donates to the Wind Shrine - item_index is how many times to click the right-arrow (ie. to switch to donating gumdrops)
+WindShrine(item_index:=0, item_amount:=1)
+{
+    If (MinutesSince(wind_shrine_cooldown) < 60)
+        Return
+
+    Menu, Tray, Icon, %A_ScriptDir%\icons\windy_bee.ico
+    wind_shrine_cooldown := A_NowUTC
+
+    ResetCharacter(2)
+    FaceHive(false)
+    MoveToSlot(0)
+    KeyPress("s", 1000)
+    Sleep, 100
+    Jump()
+    KeyPress("a", 4000)
+    Sleep, 100
+    Jump()
+    KeyPress("a", 1000)
+    KeyPress("s", 1000)
+    Sleep, 100
+    Jump()
+    KeyPress("s", 3000)
+    Loop, 3
+    {
+        Jump()
+        KeyPress("s", 1000)
+    }
+    KeyPress("s", 1000)
+    Sleep, 100
+    Jump()
+    KeyPress("s", 4500)
+    Sleep, 100
+    Jump()
+    KeyPress("a", 4000)
+    Sleep, 100
+    Jump()
+    KeyPress("a", 4000)
+    KeyPress("w", 3000)
+    KeyPress("d", 2000)
+    Sleep, 100
+    KeyPress("s", 300)
+    Sleep, 100
+    Jump()
+    KeyPress("w", 1500)
+    Jump()
+    KeyPress("w", 600)
+    Sleep, 1000
+    ; Donation
+    KeyPress("e", 50)
+    Sleep, 500
+    ImageSearch, FoundXDialogue, FoundYDialogue, 0, 0, A_ScreenWidth, A_ScreenHeight, *90 %A_ScriptDir%\images\wind_shrine_dialogue.png
+    If (ErrorLevel != 0)
+        Return
+    MouseMove, FoundXDialogue, FoundYDialogue
+    Click, Left
+    Sleep, 500
+    ImageSearch, FoundX, FoundY, 0, 0, A_ScreenWidth, A_ScreenHeight, *90 %A_ScriptDir%\images\wind_shrine_next_item.png
+    If (ErrorLevel != 0)
+        Return
+    MouseMove, FoundX, FoundY
+    Loop, %item_index%
+    {
+        Click, Left
+        Sleep, 200
+    }
+    ImageSearch, FoundX, FoundY, 0, 0, A_ScreenWidth, A_ScreenHeight, *90 %A_ScriptDir%\images\wind_shrine_increment.png
+    If (ErrorLevel != 0)
+        Return
+    MouseMove, FoundX, FoundY
+    Loop, (%item_amount% - 1)
+    {
+        Click, Left
+        Sleep, 200
+    }
+    ImageSearch, FoundX, FoundY, 0, 0, A_ScreenWidth, A_ScreenHeight, *90 %A_ScriptDir%\images\wind_shrine_donate.png
+    If (ErrorLevel != 0)
+        Return
+    MouseMove, FoundX, FoundY
+    Click, Left
+    Sleep, 500
+    MouseMove, FoundXDialogue, FoundYDialogue
+    Loop, 10
+    {
+        Click, Left
+        Sleep, 200
+    }
+    ; Token collection
+    wind_shrine_collection_movement_amount := 400
+    Loop, 3
+    {
+        KeyPress("w", wind_shrine_collection_movement_amount * 2)
+        KeyPress("d", wind_shrine_collection_movement_amount)
+        KeyPress("s", wind_shrine_collection_movement_amount)
+        KeyPress("d", wind_shrine_collection_movement_amount)
+        KeyPress("s", wind_shrine_collection_movement_amount)
+        KeyPress("s", wind_shrine_collection_movement_amount)
+        KeyPress("a", wind_shrine_collection_movement_amount)
+        KeyPress("s", wind_shrine_collection_movement_amount)
+        KeyPress("a", wind_shrine_collection_movement_amount)
+        KeyPress("w", wind_shrine_collection_movement_amount * 2)
+        wind_shrine_collection_movement_amount -= 100
+    }
+}
+
 ; Navigates to, checks inside, and collects the items from, Brown Bear's Stockings
 Stockings()
 {
+    If (MinutesSince(stockings_cooldown) < 60)
+        Return
+
     Menu, Tray, Icon, %A_ScriptDir%\icons\brown_bear.ico
     stockings_cooldown := A_NowUTC
 
@@ -868,6 +976,9 @@ Stockings()
 ; Navigates to, digs in to, and collects the yummies from, Polar Bear's Beesmas Feast
 BeesmasFeast()
 {
+    If (MinutesSince(beesmas_feast_cooldown) < 90)
+        Return
+
     Menu, Tray, Icon, %A_ScriptDir%\icons\polar_bear.ico
     beesmas_feast_cooldown := A_NowUTC
 
@@ -903,6 +1014,9 @@ BeesmasFeast()
 ; Navigates to, heats up, and collects the loot from, Dapper Bear's Samovar
 Samovar()
 {
+    If (MinutesSince(samovar_cooldown) < 360)
+        Return
+
     Menu, Tray, Icon, %A_ScriptDir%\icons\dapper_bear.ico
     samovar_cooldown := A_NowUTC
     
@@ -945,6 +1059,9 @@ Samovar()
 ; Navigates to, ganders at, and collects the goodies from, Onett's Lid Art
 LidArt()
 {
+    If (MinutesSince(lid_art_cooldown) < 480)
+        Return
+
     Menu, Tray, Icon, %A_ScriptDir%\icons\onett.ico
     lid_art_cooldown := A_NowUTC
     
@@ -981,6 +1098,9 @@ LidArt()
 ; Navigates to, admires, and collects the wax from, Riley Bee's Honeyday Candles
 HoneydayCandles()
 {
+    If (MinutesSince(honeyday_candles_cooldown) < 240)
+        Return
+
     Menu, Tray, Icon, %A_ScriptDir%\icons\riley.ico
     honeyday_candles_cooldown := A_NowUTC
 
