@@ -1390,6 +1390,36 @@ PineTreeForest(field_loops:=35)
     UnStickIfStuck()
 }
 
+; Navigates to, and farms in, the pine tree forest in a manner optimal for using the Tide Popper
+PineTreeForestTidePopper(field_loops:=150, use_shiftlock:=True)
+{
+    Menu, Tray, Icon, %A_ScriptDir%\icons\pine.ico
+    FaceHive()
+    KeyPress("d", 6969)
+    KeyPress("w", 1000)
+    Sleep, 6969
+    Jump()
+    KeyPress("d", 1500)
+    Loop, 5
+    {
+        KeyPress("e")
+    }
+    ZoomOut(5)
+    Sleep, 2500
+    KeyPress("s", 1000)
+    Send, {Space down}
+    KeyPress("d", 18000)
+    Send, {Space up}
+    Sleep, 500
+    KeyPress("a", 420*2)
+    If (use_shiftlock)
+        Send, LShift
+    GatherFieldPollen(True, 500, 125, field_loops, 3, False, False, True)
+    If (use_shiftlock)
+        Send, LShift
+    UnStickIfStuck()
+}
+
 ; Navigates to, and farms in, the pineapple patch
 PineapplePatch(field_loops:=25)
 {
