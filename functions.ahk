@@ -222,7 +222,6 @@ UnStickIfStuck()
 EmptyHiveBalloon(reset_after_emptying:=true)
 {
     Menu, Tray, Icon, %A_ScriptDir%\icons\balloon.ico
-    FaceHive()
     ImageSearch, FoundX, FoundY, A_ScreenWidth//3, 0, A_ScreenWidth, A_ScreenHeight//3, *90 %A_ScriptDir%\images\can_make_honey_from_balloon.png
     If (ErrorLevel != 0)
         Return
