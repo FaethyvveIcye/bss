@@ -221,12 +221,16 @@ UnStickIfStuck()
 ; Empties the hive balloon
 EmptyHiveBalloon(reset_after_emptying:=true)
 {
+    If (MinutesSince(balloon_cooldown) < 5)
+        Return
+
     Menu, Tray, Icon, %A_ScriptDir%\icons\balloon.ico
     ImageSearch, FoundX, FoundY, A_ScreenWidth//3, 0, A_ScreenWidth, A_ScreenHeight//3, *90 %A_ScriptDir%\images\can_make_honey_from_balloon.png
     If (ErrorLevel != 0)
         Return
 
     KeyPress("e")
+    balloon_cooldown := A_NowUTC
     Loop, 300
     {
         Sleep, 1000
@@ -1412,10 +1416,10 @@ PineTreeForestTidePopper(field_loops:=150, use_shiftlock:=True)
     KeyPress("d", 18000)
     Send, {Space up}
     Sleep, 500
-    KeyPress("a", 420*2)
+    KeyPress("a", 1000)
     If (use_shiftlock)
         Send, LShift
-    GatherFieldPollen(True, 500, 125, field_loops, 3, False, False, True)
+    GatherFieldPollen(True, 500, 125, field_loops, 2, False, False, True)
     If (use_shiftlock)
         Send, LShift
     UnStickIfStuck()
