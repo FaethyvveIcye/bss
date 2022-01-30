@@ -940,6 +940,7 @@ WindShrine(item_index:=0, item_amount:=1)
         KeyPress("w", wind_shrine_collection_movement_amount * 2)
         wind_shrine_collection_movement_amount -= 100
     }
+    ResetCharacter()
 }
 
 ; Navigates to, checks inside, and collects the items from, Brown Bear's Stockings
