@@ -6,23 +6,26 @@ Our attempt at providing a powerful & easily extensible / editable function list
 ## Features
 - Easily configurable hotkeys, such as the default CTRL+P to play, CTRL+Q to stop
 - Reconnect to the game if you lost connection or the server restarted
-- Set cooldowns for any task (such as bug running every 20/30/60/any minutes, wealth clock every hour, ant pass every 2 hours)
+- Set cooldowns for any task (such as bug running every 20/30/60/any minutes, wealth clock every hour, ant pass every 2 hours) that persist through macro sessions
 - Place 1-4 sprinklers, jumping as necessary automatically
 - Support for emptying the hive balloon if desired
+- Fully configureable planter support & management including harvesting, replacing, and rotating them through fields defined in `config.ini`
 
 ## How to Use
 
 1. Download & Install [Autohotkey](https://www.autohotkey.com/)
-2. Download this code and it's dependencies (Code -> Download ZIP) & unzip it into a directory of your choice
-3. Edit `config.ahk` to your liking, put your sprinkler in the first slot of your hotbar ingame
-4. Run the included example `sunf +bca.ahk` or any user-created file, default hotkeys are CTRL+Q to stop, and CTRL+P to play.
+2. Download this code and it's dependencies (Code -> Download ZIP) & unzip it into a directory of your choice.
+3. Edit `config.ini` to your liking (NOT `configuration.ahk` - run `reset config.ahk` first if you don't have a `config.ini` file).
+4. Put your sprinkler in the first slot of your hotbar ingame.
+5. Run an included example such as `sunf +bca.ahk` or `pine balloon.ahk` or any user-created file, default hotkeys are CTRL+Q to stop, and CTRL+P to play.
 
 ## Troubleshooting
 - Make sure your screen resolution is at least 800x600 and Windows Display Scaling is set to 100% (default), otherwise you may have to recapture or resize the pictures inside the `errors` and `images` folders
-- Make sure you have your sprinkler in the first slot, and have edited `config.ahk`
+- Make sure you have your sprinkler in the first slot, and have edited `config.ini`
+- You can try running the `reset config.ahk` file and re-editing the fresh `config.ini` if these functions worked for you in the past but stopped working.
 
 ## Creating Your Own Macros
-- Browse through the comments inside `functions.ahk` to create your own macro, or take a look at the implementation in the included example `sunf +bca.ahk` for ideas or inspiration. This example macro:
+- Browse through the comments inside `functions.ahk` to create your own macro, or take a look at the implementation in the included examples for ideas or inspiration. For example, the `sunf +bca` macro:
     - Reconnects if disconnected
     - Activates the Wealth Clock every hour
     - Uses the free Ant Pass dispenser every 2 hours
@@ -31,3 +34,8 @@ Our attempt at providing a powerful & easily extensible / editable function list
       - Note: See the warnings in `functions.ahk`
     - Farms in sunflower field if it's not time to grab clock/ant/mondo/bugs
     - Empties the hive balloon if it hasn't been emptied in the last 30 minutes
+- `pine balloon.ahk` implements some newer features, such as:
+    - Activating Beesmas machines
+    - Placing, harvesting, looting, and rotating planters through fields as defined in `config.ini`
+    - Donating to the Wind Shrine & activating a field booster
+    - Farming Pine Tree Forest in a unique way designed for using the Tide Popper

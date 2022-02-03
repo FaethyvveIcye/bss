@@ -1,0 +1,2 @@
+#Include configuration.ahk
+ConfigReset()

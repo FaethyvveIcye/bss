@@ -30,7 +30,10 @@ Loop
     LidArt()
     HoneydayCandles()
 
+    ManagePlanters()
+
     WindShrine()
+    BlueFieldBooster()
     PineTreeForestTidePopper(150)
     ResetCharacter()
     EmptyHiveBalloon()

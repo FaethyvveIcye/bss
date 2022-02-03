@@ -1,6 +1,4 @@
-deprecated/
-afkclock.ahk
-basic egg.ahk
-specific field.ahk
-stump +ca.ahk
-test.ahk
+# personal .gitignore rules should go into '.git/info/exclude'
+
+# config files
+*.ini

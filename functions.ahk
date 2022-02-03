@@ -1,18 +1,25 @@
 ;; Made by Lessy / Saber
-#Include config.ahk
+#Include configuration.ahk
+If (GetConfigVersion() != 1)
+{
+    MsgBox, Your config.ini file is out of date, please press "OK" then run "reset config.ahk"
+    ExitApp
+}
+UpdateGlobalsFromIni()
 
 ; Helper function to press a given key for a duration, similar to the JitBit function of the same name
 KeyPress(key, duration:=0)
 {
 
     Send, {%key% down}
-    Sleep, (duration * movespeed_factor)
+    Sleep, (duration * Stats_movespeed_factor)
     Send, {%key% up}
 }
 
 ; Helper function to assist in adding timers to different activities
 SecondsSince(previous_time)
 {
+    UpdateIniFromGlobals()
     time_difference := A_NowUTC
     EnvSub, time_difference, previous_time, Seconds
     Return time_difference
@@ -21,13 +28,110 @@ SecondsSince(previous_time)
 ; Helper function to assist in adding timers to different activities
 MinutesSince(previous_time)
 {
+    UpdateIniFromGlobals()
     time_difference := A_NowUTC
     EnvSub, time_difference, previous_time, Minutes
     Return time_difference
 }
 
+; Harvests the specified planter from the field it's currently in, returning True if the planter is ready to be re-placed, and False otherwise
+HarvestPlanter(planter_number)
+{
+    For each, field in Planters_planter%planter_number%_fields
+    {
+        If (field == Planters_planter%planter_number%_current_field)
+        {
+            ; cooldown isn't up yet, skip harvesting
+            If (MinutesSince(Cooldowns_planter%planter_number%) < Planters_planter%planter_number%_reuse_time[each])
+                Return False
+
+            current_planter := Planters_planter%planter_number%
+            Menu, Tray, Icon, %A_ScriptDir%\icons\planter_%current_planter%.ico
+            ResetCharacter(3)
+            %field%(0)  ; dynamically calling the field macro with 0 field loops to navigate to the field
+            Loop, 5
+            {
+                KeyPress("e", 200)
+            }
+            Sleep, 1000
+            ImageSearch, FoundX, FoundY, 0, 0, A_ScreenWidth, A_ScreenHeight, *90 %A_ScriptDir%\images\planter_still_growing.png
+            If (ErrorLevel == 0)
+            {
+                MouseGetPos, MouseX, MouseY
+                MouseMove, FoundX, FoundY
+                Sleep, 1000
+                Click, Left
+                MouseMove, MouseX, MouseY
+                EnvAdd, Cooldowns_planter%planter_number%, 15, Minutes
+                UpdateIniFromGlobals()
+                Return False
+            } Else {
+                to_return := True
+                If (Planters_planter%planter_number%_fields.Length() == 1)
+                {
+                    KeyPress(Hotkeys_planter%planter_number%)
+                    Planters_planter%planter_number%_current_field := %field%
+                    Cooldowns_planter%planter_number% := A_NowUTC
+                    UpdateIniFromGlobals()
+                    to_return := False
+                }
+                ; Planters_planter#_current_field should continue to store the last planter for referencing where to place it next until it is placed
+                KeyPress("a", 600)
+                KeyPress("s", 100)
+                Sleep, 100
+                CircleForLoot(11)
+                Return to_return
+            }
+        }
+    }
+    ; planter is in an unregistered field or it's nowhere, assuming inventory
+    Planters_planter%planter_number%_current_field := "nowhere"
+    UpdateIniFromGlobals()
+    Return True
+}
+
+; Places down the specified planter in the next field it should go in
+PlacePlanter(planter_number)
+{
+    field_to_place_the_planter_in := Planters_planter%planter_number%_fields[1]
+    For each, field in Planters_planter%planter_number%_fields
+    {
+        If (field == Planters_planter%planter_number%_current_field)  ; this was the previous field
+        {
+            If (Planters_planter%planter_number%_fields.Length() > each)
+                field_to_place_the_planter_in := Planters_planter%planter_number%_fields[each+1]
+            Break
+        }
+    }
+    current_planter := Planters_planter%planter_number%
+    Menu, Tray, Icon, %A_ScriptDir%\icons\planter_%current_planter%.ico
+    ResetCharacter(3)
+    %field_to_place_the_planter_in%(0)    ; we are once again dynamically calling the field macro with 0 field loops to navigate to the field
+    KeyPress(Hotkeys_planter%planter_number%)
+    Planters_planter%planter_number%_current_field := field_to_place_the_planter_in
+    Cooldowns_planter%planter_number% := A_NowUTC
+    UpdateIniFromGlobals()
+    Return True
+}
+
+; Harvests any ready planter, replanting them in the appropriate fields
+ManagePlanters()
+{
+    ReconnectIfDisconnected()
+
+    If (HarvestPlanter(1))
+        PlacePlanter(1)
+
+    If (HarvestPlanter(2))
+        PlacePlanter(2)
+
+    If (HarvestPlanter(3))
+        PlacePlanter(3)
+}
+
 ; Helper function that checks if you are connected to the game by seeing if your sprinklers on hotkey #1 are visible or not
 IsConnected()
+
 {
     ImageSearch, FoundX, FoundY, 0, A_ScreenHeight//2, A_ScreenWidth//2, A_ScreenHeight, *40 %A_ScriptDir%\images\reconnect_sprinkler.png
     Return (ErrorLevel == 0)
@@ -38,14 +142,20 @@ Reconnect()
 {
     Menu, Tray, Icon, %A_ScriptDir%\icons\connection_problems.ico
 
-    Run, %VIP_to_reconnect_to%
+    Run, %Stats_VIP_to_reconnect_to%
 
-    wealthclock_cooldown := A_NowUTC
+    Cooldowns_wealthclock := A_NowUTC
     FormatTime, CurrentMinute, A_NowUTC, m
     If (CurrentMinute < 16)
-        mondo_cooldown := A_NowUTC
+    {
+        Cooldowns_mondo := A_NowUTC
+    }
+    EnvAdd, Cooldowns_planter1, Stats_seconds_to_wait_on_reconnect, Seconds
+    EnvAdd, Cooldowns_planter2, Stats_seconds_to_wait_on_reconnect, Seconds
+    EnvAdd, Cooldowns_planter3, Stats_seconds_to_wait_on_reconnect, Seconds
+    UpdateIniFromGlobals()
 
-    Sleep, (seconds_to_wait_on_reconnect * 1000)
+    Sleep, (Stats_seconds_to_wait_on_reconnect * 1000)
 
     If !(IsConnected())
         Return Reconnect()
@@ -63,7 +173,7 @@ Reconnect()
 
     KeyPress("w", 5000)
     KeyPress("s", 800)
-    (hive_slot < 3) ? KeyPress("d", (1200 * (3 - hive_slot))) : KeyPress("a", (1200 * (hive_slot - 3)))
+    (Stats_hive_slot < 3) ? KeyPress("d", (1200 * (3 - Stats_hive_slot))) : KeyPress("a", (1200 * (Stats_hive_slot - 3)))
     Loop, 5
     {
         KeyPress("e")
@@ -73,7 +183,7 @@ Reconnect()
     Return
 }
 
-; Reconnects to the VIP provided in `config` if disconnected
+; Reconnects to the VIP provided in `config.ini` if disconnected
 ReconnectIfDisconnected()
 {
     If !(IsConnected())
@@ -131,7 +241,7 @@ ResetCharacter(times:=1)
 ; Places down your sprinklers, jump-glitching to place more if needed
 PlaceSprinklers()
 {
-    RemainingSprinklers := sprinkler_amount
+    RemainingSprinklers := Stats_sprinkler_amount
     Loop
     {
         KeyPress("1")
@@ -184,7 +294,7 @@ FaceHive(should_face_hive:=true)
 MoveToSlot(new_slot)
 {
     distance_between_slots := 1200
-    (hive_slot < new_slot) ? KeyPress("d", (distance_between_slots * (new_slot - hive_slot))) : KeyPress("a", (distance_between_slots * (hive_slot - new_slot)))
+    (Stats_hive_slot < new_slot) ? KeyPress("d", (distance_between_slots * (new_slot - Stats_hive_slot))) : KeyPress("a", (distance_between_slots * (Stats_hive_slot - new_slot)))
 }
 
 ; Helper function that checks to see if you're stuck in a shop / dispenser
@@ -218,11 +328,14 @@ UnStickIfStuck()
         UnStick()
 }
 
-; Empties the hive balloon
-EmptyHiveBalloon(reset_after_emptying:=true)
+; Empties the hive balloon - does not reset your character first
+EmptyHiveBalloon(reset_after_emptying:=false)
 {
-    If (MinutesSince(balloon_cooldown) < 5)
+    If (MinutesSince(Cooldowns_balloon) < 5)
         Return
+
+    If (MinutesSince(Cooldowns_whirligig) > 1)
+        FaceHive()
 
     Menu, Tray, Icon, %A_ScriptDir%\icons\balloon.ico
     ImageSearch, FoundX, FoundY, A_ScreenWidth//3, 0, A_ScreenWidth, A_ScreenHeight//3, *90 %A_ScriptDir%\images\can_make_honey_from_balloon.png
@@ -230,8 +343,9 @@ EmptyHiveBalloon(reset_after_emptying:=true)
         Return
 
     KeyPress("e")
-    balloon_cooldown := A_NowUTC
-    Loop, 300
+    Cooldowns_balloon := A_NowUTC
+    UpdateIniFromGlobals()
+    Loop, 600
     {
         Sleep, 1000
         ImageSearch, FoundX, FoundY, A_ScreenWidth//3, 0, A_ScreenWidth, A_ScreenHeight//3, *90 %A_ScriptDir%\images\making_honey_from_balloon.png
@@ -246,10 +360,11 @@ EmptyHiveBalloon(reset_after_emptying:=true)
 ; Uses a Whirligig or resets if it's on cooldown
 WhirligigOrReset(camera_rotations:=0)
 {
-    If (MinutesSince(whirligig_cooldown) > 5)
+    If (MinutesSince(Cooldowns_whirligig) > 5)
     {
-        KeyPress(whirligig_hotkey_bind)
-        whirligig_cooldown := A_NowUTC
+        KeyPress(Hotkeys_whirligig)
+        Cooldowns_whirligig := A_NowUTC
+        UpdateIniFromGlobals()
         RotateCamera(camera_rotations)
         Sleep, 1000
     } Else {
@@ -288,11 +403,12 @@ CircleForLoot(circles:=5, repeats:=0)
 ; Grabs wealth clock during Beesmas, then resets, skipping if on cooldown automatically
 WealthClock()
 {
-    If (MinutesSince(wealthclock_cooldown) < 60)
+    If (MinutesSince(Cooldowns_wealthclock) < 60)
         Return
 
     Menu, Tray, Icon, %A_ScriptDir%\icons\clock.ico
-    wealthclock_cooldown := A_NowUTC
+    Cooldowns_wealthclock := A_NowUTC
+    UpdateIniFromGlobals()
 
     ResetCharacter(3)    ; extra resets prevent haste problems & bear morph reset glitches
     FaceHive(false)
@@ -302,7 +418,7 @@ WealthClock()
     RotateCamera(6)
     Sleep, 500
     Send, {w down}
-    Jump(17000*movespeed_factor)
+    Jump(17000*Stats_movespeed_factor)
     Send, {w up}
     Sleep, 1000
     Loop, 20
@@ -316,11 +432,12 @@ WealthClock()
 ; Grabs wealth clock, then resets, skipping if on cooldown automatically
 WealthClock()
 {
-    If (MinutesSince(wealthclock_cooldown) < 60)
+    If (MinutesSince(Cooldowns_wealthclock) < 60)
         Return
 
     Menu, Tray, Icon, %A_ScriptDir%\icons\clock.ico
-    wealthclock_cooldown := A_NowUTC
+    Cooldowns_wealthclock := A_NowUTC
+    UpdateIniFromGlobals()
     FaceHive(false)
     Sleep, 500
     KeyPress("s", 100)
@@ -334,11 +451,11 @@ WealthClock()
     Jump(100)
     KeyPress("w", 1000)
     Send, {d down}
-    Sleep, 4000 * movespeed_factor
+    Sleep, 4000 * Stats_movespeed_factor
     Jump()
-    Sleep, 2000 * movespeed_factor
+    Sleep, 2000 * Stats_movespeed_factor
     Jump()
-    Sleep, 2000 * movespeed_factor
+    Sleep, 2000 * Stats_movespeed_factor
     Send, {d up}
     KeyPress("s", 2000)
     KeyPress("d", 3000)
@@ -346,15 +463,15 @@ WealthClock()
     KeyPress("d", 600)
     Sleep, 100
     Send, {d down}
-    Sleep, 3000 * movespeed_factor
+    Sleep, 3000 * Stats_movespeed_factor
     Jump()
-    Sleep, 1500 * movespeed_factor
+    Sleep, 1500 * Stats_movespeed_factor
     Jump()
-    Sleep, 1000 * movespeed_factor
+    Sleep, 1000 * Stats_movespeed_factor
     Send, {d up}
     Sleep, 100
     Send, {w down}
-    Sleep, 1100 * movespeed_factor
+    Sleep, 1100 * Stats_movespeed_factor
     Jump()
     Loop, 50
     {
@@ -368,11 +485,12 @@ WealthClock()
 ; Grabs ant pass, then resets, skipping if on cooldown automatically
 AntPass()
 {
-    If (MinutesSince(antpass_cooldown) < 120)
+    If (MinutesSince(Cooldowns_antpass) < 120)
         Return
 
     Menu, Tray, Icon, %A_ScriptDir%\icons\ant.ico
-    antpass_cooldown := A_NowUTC
+    Cooldowns_antpass := A_NowUTC
+    UpdateIniFromGlobals()
     FaceHive()
     KeyPress("w", 100)
     KeyPress("w", 700)
@@ -424,7 +542,8 @@ BugRun()
 {
     FaceHive(false)
     MoveToSlot(3)
-    bugrun_cooldown := A_NowUTC
+    Cooldowns_bugrun := A_NowUTC
+    UpdateIniFromGlobals()
 
     Menu, Tray, Icon, %A_ScriptDir%\icons\mushroom.ico
     KeyPress("w", 10000)
@@ -491,7 +610,7 @@ BugRun()
     } Else {
         KeyPress("a", 200)
         Send, {s down}{a down}
-        Sleep, 1200 * movespeed_factor
+        Sleep, 1200 * Stats_movespeed_factor
         Send, {s up}{a up}
         KeyPress("a", 1400)
         Menu, Tray, Icon, %A_ScriptDir%\icons\cactus.ico
@@ -706,7 +825,7 @@ BugRun()
 ; Kills Mondo chick & loots the items
 Mondo()
 {
-    If (MinutesSince(mondo_cooldown) < 40)
+    If (MinutesSince(Cooldowns_mondo) < 40)
         Return
 
     FormatTime, CurrentMinute, A_NowUTC, m
@@ -714,7 +833,8 @@ Mondo()
         Return
 
     Menu, Tray, Icon, %A_ScriptDir%\icons\mondo.ico
-    mondo_cooldown := A_NowUTC
+    Cooldowns_mondo := A_NowUTC
+    UpdateIniFromGlobals()
 
     ResetCharacter(2)    ; extra resets prevent bear morph reset glitches
     FaceHive()
@@ -841,15 +961,74 @@ AntChallenge()
     UnStickIfStuck()
 }
 
+; Navigates to and activates the Blue Field Booster in Blue HQ
+BlueFieldBooster()
+{
+    If (MinutesSince(Cooldowns_blue_field_booster) < 60)
+        Return
+
+    Menu, Tray, Icon, %A_ScriptDir%\icons\blue_field_booster.ico
+    ResetCharacter(2)
+    FaceHive(false)
+    MoveToSlot(3)
+    KeyPress("w", 5750)
+    KeyPress("d", 5500)
+    KeyPress("w", 2300)
+    KeyPress("d", 11000)
+    Sleep, 100
+    Jump()
+    KeyPress("d", 500)
+    KeyPress("s", 1500)
+    KeyPress("a", 3200)
+    KeyPress("w", 2200)
+    Loop, 5
+    {
+        KeyPress("e", 50)
+    }
+    Cooldowns_blue_field_booster := A_NowUTC
+    UpdateIniFromGlobals()
+}
+
+; Navigates to and activates the Red Field Booster in Red HQ
+RedFieldBooster()
+{
+    If (MinutesSince(Cooldowns_red_field_booster) < 60)
+        Return
+
+    Menu, Tray, Icon, %A_ScriptDir%\icons\red_field_booster.ico
+    ResetCharacter(2)
+    FaceHive(false)
+    MoveToSlot(0)
+    KeyPress("w", 4000)
+    KeyPress("s", 100)
+    Sleep, 100
+    Jump()
+    KeyPress("w", 1000)
+    RotateCamera(2)
+    KeyPress("w", 2000)
+    KeyPress("a", 1000)
+    KeyPress("d", 1000)
+    KeyPress("s", 100)
+    Sleep, 100
+    Jump()
+    KeyPress("w", 2500)
+    KeyPress("a", 1000)
+    Loop, 5
+    {
+        KeyPress("e", 50)
+    }
+    Cooldowns_red_field_booster := A_NowUTC
+    UpdateIniFromGlobals()
+}
+
+
 ; Navigates to and donates to the Wind Shrine - item_index is how many times to click the right-arrow (ie. to switch to donating gumdrops)
 WindShrine(item_index:=0, item_amount:=1)
 {
-    If (MinutesSince(wind_shrine_cooldown) < 60)
+    If (MinutesSince(Cooldowns_wind_shrine) < 60)
         Return
 
     Menu, Tray, Icon, %A_ScriptDir%\icons\windy_bee.ico
-    wind_shrine_cooldown := A_NowUTC
-
     ResetCharacter(2)
     FaceHive(false)
     MoveToSlot(0)
@@ -891,10 +1070,18 @@ WindShrine(item_index:=0, item_amount:=1)
     Sleep, 1000
     ; Donation
     KeyPress("e", 50)
-    Sleep, 500
+    MouseGetPos, MouseOriginalX, MouseOriginalY
+    MouseMove, 100, 100
+    Sleep, 1000
+    FoundXDialogue := 100
+    FoundYDialogue := 100
     ImageSearch, FoundXDialogue, FoundYDialogue, 0, 0, A_ScreenWidth, A_ScreenHeight, *90 %A_ScriptDir%\images\wind_shrine_dialogue.png
     If (ErrorLevel != 0)
-        Return
+    {
+        ImageSearch, FoundXDialogue, FoundYDialogue, 0, 0, A_ScreenWidth, A_ScreenHeight, *90 %A_ScriptDir%\images\wind_shrine_offering.png
+        If (ErrorLevel != 0)
+            Return
+    }
     MouseMove, FoundXDialogue, FoundYDialogue
     Click, Left
     Sleep, 500
@@ -921,6 +1108,8 @@ WindShrine(item_index:=0, item_amount:=1)
         Return
     MouseMove, FoundX, FoundY
     Click, Left
+    Cooldowns_wind_shrine := A_NowUTC
+    UpdateIniFromGlobals()
     Sleep, 500
     MouseMove, FoundXDialogue, FoundYDialogue
     Loop, 10
@@ -928,34 +1117,38 @@ WindShrine(item_index:=0, item_amount:=1)
         Click, Left
         Sleep, 200
     }
+    MouseMove, MouseOriginalX, MouseOriginalY
     ; Token collection
     wind_shrine_collection_movement_amount := 400
-    Loop, 3
+    Loop, 2
     {
         KeyPress("w", wind_shrine_collection_movement_amount * 2)
         KeyPress("d", wind_shrine_collection_movement_amount)
-        KeyPress("s", wind_shrine_collection_movement_amount)
-        KeyPress("d", wind_shrine_collection_movement_amount)
-        KeyPress("s", wind_shrine_collection_movement_amount)
-        KeyPress("s", wind_shrine_collection_movement_amount)
+        KeyPress("s", wind_shrine_collection_movement_amount / 2)
+        KeyPress("d", wind_shrine_collection_movement_amount / 2)
+        KeyPress("s", wind_shrine_collection_movement_amount / 2)
+        KeyPress("d", wind_shrine_collection_movement_amount / 2)
+        KeyPress("s", wind_shrine_collection_movement_amount * 2)
+        KeyPress("a", wind_shrine_collection_movement_amount / 2)
+        KeyPress("s", wind_shrine_collection_movement_amount / 2)
+        KeyPress("a", wind_shrine_collection_movement_amount / 2)
+        KeyPress("s", wind_shrine_collection_movement_amount / 2)
         KeyPress("a", wind_shrine_collection_movement_amount)
-        KeyPress("s", wind_shrine_collection_movement_amount)
-        KeyPress("a", wind_shrine_collection_movement_amount)
+        Sleep, 100
+        Jump()
         KeyPress("w", wind_shrine_collection_movement_amount * 2)
+        Sleep, 1000
         wind_shrine_collection_movement_amount -= 100
     }
-    ResetCharacter()
 }
 
 ; Navigates to, checks inside, and collects the items from, Brown Bear's Stockings
 Stockings()
 {
-    If (MinutesSince(stockings_cooldown) < 60)
+    If (MinutesSince(Cooldowns_stockings) < 60)
         Return
 
     Menu, Tray, Icon, %A_ScriptDir%\icons\brown_bear.ico
-    stockings_cooldown := A_NowUTC
-
     ResetCharacter(3)
     FaceHive(false)
     Sleep, 500
@@ -964,14 +1157,16 @@ Stockings()
     RotateCamera(6)
     Sleep, 500
     KeyPress("w", 6000)
-    KeyPress("d", 500)
     Sleep, 100
     Jump()
     KeyPress("w", 5000)
+    KeyPress("d", 500)
     Loop, 5
     {
         KeyPress("e", 50)
     }
+    Cooldowns_stockings := A_NowUTC
+    UpdateIniFromGlobals()
     KeyPress("w", 1000)
     KeyPress("d", 350)
     KeyPress("s", 1500)
@@ -980,12 +1175,10 @@ Stockings()
 ; Navigates to, digs in to, and collects the yummies from, Polar Bear's Beesmas Feast
 BeesmasFeast()
 {
-    If (MinutesSince(beesmas_feast_cooldown) < 90)
+    If (MinutesSince(Cooldowns_beesmas_feast) < 90)
         Return
 
     Menu, Tray, Icon, %A_ScriptDir%\icons\polar_bear.ico
-    beesmas_feast_cooldown := A_NowUTC
-
     ResetCharacter(3)
     FaceHive(false)
     MoveToSlot(0)
@@ -1011,6 +1204,8 @@ BeesmasFeast()
     {
         KeyPress("e", 50)
     }
+    Cooldowns_beesmas_feast := A_NowUTC
+    UpdateIniFromGlobals()
     Sleep, 1500
     CircleForLoot()
 }
@@ -1018,12 +1213,10 @@ BeesmasFeast()
 ; Navigates to, heats up, and collects the loot from, Dapper Bear's Samovar
 Samovar()
 {
-    If (MinutesSince(samovar_cooldown) < 360)
+    If (MinutesSince(Cooldowns_samovar) < 360)
         Return
 
     Menu, Tray, Icon, %A_ScriptDir%\icons\dapper_bear.ico
-    samovar_cooldown := A_NowUTC
-    
     ResetCharacter(2)
     FaceHive(false)
     MoveToSlot(0)
@@ -1044,31 +1237,31 @@ Samovar()
     Jump()
     KeyPress("w", 2000)
     KeyPress("s", 100)
+    RotateCamera(7)
     Sleep, 100
     Jump()
-    KeyPress("w", 2000)
-    RotateCamera(7)
+    KeyPress("a", 775)
     KeyPress("s", 100)
     Sleep, 100
     Jump()
-    KeyPress("w", 900)
+    KeyPress("w", 950)
     Loop, 5
     {
         KeyPress("e", 50)
     }
+    Cooldowns_samovar := A_NowUTC
+    UpdateIniFromGlobals()
     Sleep, 3000
-    CircleForLoot()
+    CircleForLoot(7)
 }
 
 ; Navigates to, ganders at, and collects the goodies from, Onett's Lid Art
 LidArt()
 {
-    If (MinutesSince(lid_art_cooldown) < 480)
+    If (MinutesSince(Cooldowns_lid_art) < 480)
         Return
 
     Menu, Tray, Icon, %A_ScriptDir%\icons\onett.ico
-    lid_art_cooldown := A_NowUTC
-    
     ResetCharacter(3)
     FaceHive(false)
     MoveToSlot(0)
@@ -1095,19 +1288,20 @@ LidArt()
     {
         KeyPress("e", 50)
     }
+    Cooldowns_lid_art := A_NowUTC
+    UpdateIniFromGlobals()
     Sleep, 3000
-    CircleForLoot()
+    KeyPress("a", 200)
+    CircleForLoot(7)
 }
 
 ; Navigates to, admires, and collects the wax from, Riley Bee's Honeyday Candles
 HoneydayCandles()
 {
-    If (MinutesSince(honeyday_candles_cooldown) < 240)
+    If (MinutesSince(Cooldowns_honeyday_candles) < 240)
         Return
 
     Menu, Tray, Icon, %A_ScriptDir%\icons\riley.ico
-    honeyday_candles_cooldown := A_NowUTC
-
     ResetCharacter(2)
     FaceHive(false)
     MoveToSlot(0)
@@ -1130,7 +1324,11 @@ HoneydayCandles()
     {
         KeyPress("e", 50)
     }
+    Cooldowns_honeyday_candles := A_NowUTC
+    UpdateIniFromGlobals()
     Sleep, 5000
+    RotateCamera(4)
+    CircleForLoot()
 }
 
 ; Places sprinklers then snakes the field for pollen, optionally stopping if bag is full
@@ -1153,10 +1351,10 @@ GatherFieldPollen(stop_on_full_bag:=True, vertical_length:=300, horizontal_lengt
         ; right movement
         Loop, %snakes%
         {
+            KeyPress("d", (inch_right ? horizontal_length*1.03 : horizontal_length))
             KeyPress("w", (inch_forwards ? vertical_length*1.03 : vertical_length))
             KeyPress("d", (inch_right ? horizontal_length*1.03 : horizontal_length))
             KeyPress("s", (inch_backwards ? vertical_length*1.03 : vertical_length))
-            KeyPress("d", (inch_right ? horizontal_length*1.03 : horizontal_length))
         }
         If (stop_on_full_bag && IsBagFull())
             break
@@ -1164,10 +1362,10 @@ GatherFieldPollen(stop_on_full_bag:=True, vertical_length:=300, horizontal_lengt
         ; left movement
         Loop, %snakes%
         {
+            KeyPress("a", (inch_left ? horizontal_length*1.03 : horizontal_length))
             KeyPress("w", (inch_forwards ? vertical_length*1.03 : vertical_length))
             KeyPress("a", (inch_left ? horizontal_length*1.03 : horizontal_length))
             KeyPress("s", (inch_backwards ? vertical_length*1.03 : vertical_length))
-            KeyPress("a", (inch_left ? horizontal_length*1.03 : horizontal_length))
         }
         If (stop_on_full_bag && IsBagFull())
             break
@@ -1179,7 +1377,8 @@ GatherFieldPollen(stop_on_full_bag:=True, vertical_length:=300, horizontal_lengt
 ; Navigates to, and farms in, the bamboo field
 BambooField(field_loops:=30)
 {
-    Menu, Tray, Icon, %A_ScriptDir%\icons\bamboo.ico
+    If (field_loops > 0)
+        Menu, Tray, Icon, %A_ScriptDir%\icons\bamboo.ico
     ResetCharacter()
     FaceHive(false)
     MoveToSlot(3)
@@ -1196,7 +1395,8 @@ BambooField(field_loops:=30)
 ; Navigates to, and farms in, the blue flower field
 BlueFlowerField(field_loops:=30)
 {
-    Menu, Tray, Icon, %A_ScriptDir%\icons\bluf.ico
+    If (field_loops > 0)
+        Menu, Tray, Icon, %A_ScriptDir%\icons\bluf.ico
     ResetCharacter()
     FaceHive(false)
     MoveToSlot(3)
@@ -1213,7 +1413,8 @@ BlueFlowerField(field_loops:=30)
 ; Navigates to, and farms in, the cactus field
 CactusField(field_loops:=20)
 {
-    Menu, Tray, Icon, %A_ScriptDir%\icons\cactus.ico
+    If (field_loops > 0)
+        Menu, Tray, Icon, %A_ScriptDir%\icons\cactus.ico
     ResetCharacter()
     FaceHive(false)
     MoveToSlot(3)
@@ -1236,7 +1437,8 @@ CactusField(field_loops:=20)
 ; Navigates to, and farms in, the clover field
 CloverField(field_loops:=30)
 {
-    Menu, Tray, Icon, %A_ScriptDir%\icons\clover.ico
+    If (field_loops > 0)
+        Menu, Tray, Icon, %A_ScriptDir%\icons\clover.ico
     ResetCharacter()
     FaceHive(false)
     MoveToSlot(3)
@@ -1259,7 +1461,8 @@ CloverField(field_loops:=30)
 ; Navigates to, and farms in, the coconut field
 CoconutField(field_loops:=20)
 {
-    Menu, Tray, Icon, %A_ScriptDir%\icons\coconut.ico
+    If (field_loops > 0)
+        Menu, Tray, Icon, %A_ScriptDir%\icons\coconut.ico
     FaceHive()
     KeyPress("d", 6969)
     KeyPress("w", 1000)
@@ -1286,7 +1489,8 @@ CoconutField(field_loops:=20)
 ; Navigates to, and farms in, the dandelion field
 DandelionField(field_loops:=30)
 {
-    Menu, Tray, Icon, %A_ScriptDir%\icons\dandelion.ico
+    If (field_loops > 0)
+        Menu, Tray, Icon, %A_ScriptDir%\icons\dandelion.ico
     ResetCharacter()
     FaceHive(false)
     MoveToSlot(5.5)
@@ -1299,7 +1503,8 @@ DandelionField(field_loops:=30)
 ; Navigates to, and farms in, the mountain top field
 MountainTopField(field_loops:=20)
 {
-    Menu, Tray, Icon, %A_ScriptDir%\icons\mountain.ico
+    If (field_loops > 0)
+        Menu, Tray, Icon, %A_ScriptDir%\icons\mountain.ico
     FaceHive()
     KeyPress("d", 6969)
     KeyPress("w", 1000)
@@ -1321,7 +1526,8 @@ MountainTopField(field_loops:=20)
 ; Navigates to, and farms in, the mushroom field
 MushroomField(field_loops:=30)
 {
-    Menu, Tray, Icon, %A_ScriptDir%\icons\mushroom.ico
+    If (field_loops > 0)
+        Menu, Tray, Icon, %A_ScriptDir%\icons\mushroom.ico
     ResetCharacter()
     FaceHive(false)
     MoveToSlot(3)
@@ -1335,7 +1541,8 @@ MushroomField(field_loops:=30)
 ; Navigates to, and farms in, the pepper patch
 PepperPatch(field_loops:=20)
 {
-    Menu, Tray, Icon, %A_ScriptDir%\icons\pepper.ico
+    If (field_loops > 0)
+        Menu, Tray, Icon, %A_ScriptDir%\icons\pepper.ico
     FaceHive()
     KeyPress("d", 6969)
     KeyPress("w", 1000)
@@ -1370,27 +1577,30 @@ PepperPatch(field_loops:=20)
 ; Navigates to, and farms in, the pine tree forest
 PineTreeForest(field_loops:=35)
 {
-    Menu, Tray, Icon, %A_ScriptDir%\icons\pine.ico
-    FaceHive()
-    KeyPress("d", 6969)
-    KeyPress("w", 1000)
-    Sleep, 6969
+    If (field_loops > 0)
+        Menu, Tray, Icon, %A_ScriptDir%\icons\pine.ico
+    ResetCharacter()
+    FaceHive(false)
+    MoveToSlot(0)
+    KeyPress("s", 1000)
     Jump()
-    KeyPress("d", 1500)
-    RotateCamera(6)
+    KeyPress("a", 1500)
+    RotateCamera(2)
     Loop, 5
     {
         KeyPress("e")
     }
-    ZoomOut(5)
     Sleep, 2500
-    KeyPress("d", 1000)
+    ZoomOut(5)
+    KeyPress("d", 800)
+    Sleep, 100
     Send, {Space down}
     KeyPress("w", 18000)
     Send, {Space up}
     Sleep, 500
-    KeyPress("a", 1337)
+    KeyPress("a", 420)
     KeyPress("s", 420*2)
+    Sleep, 100
     GatherFieldPollen(True, 650, 125, field_loops, 2, True)
     UnStickIfStuck()
 }
@@ -1398,20 +1608,23 @@ PineTreeForest(field_loops:=35)
 ; Navigates to, and farms in, the pine tree forest in a manner optimal for using the Tide Popper
 PineTreeForestTidePopper(field_loops:=150, use_shiftlock:=True)
 {
-    Menu, Tray, Icon, %A_ScriptDir%\icons\pine.ico
-    FaceHive()
-    KeyPress("d", 6969)
-    KeyPress("w", 1000)
-    Sleep, 6969
+    If (field_loops > 0)
+        Menu, Tray, Icon, %A_ScriptDir%\icons\pine.ico
+    ResetCharacter()
+    FaceHive(false)
+    MoveToSlot(0)
+    KeyPress("s", 1000)
     Jump()
-    KeyPress("d", 1500)
+    KeyPress("a", 1500)
+    RotateCamera(4)
     Loop, 5
     {
         KeyPress("e")
     }
-    ZoomOut(5)
     Sleep, 2500
-    KeyPress("s", 1000)
+    ZoomOut(5)
+    KeyPress("s", 800)
+    Sleep, 100
     Send, {Space down}
     KeyPress("d", 18000)
     Send, {Space up}
@@ -1419,7 +1632,7 @@ PineTreeForestTidePopper(field_loops:=150, use_shiftlock:=True)
     KeyPress("a", 1000)
     If (use_shiftlock)
         Send, LShift
-    GatherFieldPollen(True, 500, 125, field_loops, 2, False, False, True)
+    GatherFieldPollen(True, 500, 120, field_loops, 2, False, False, True)
     If (use_shiftlock)
         Send, LShift
     UnStickIfStuck()
@@ -1428,7 +1641,8 @@ PineTreeForestTidePopper(field_loops:=150, use_shiftlock:=True)
 ; Navigates to, and farms in, the pineapple patch
 PineapplePatch(field_loops:=25)
 {
-    Menu, Tray, Icon, %A_ScriptDir%\icons\pineapple.ico
+    If (field_loops > 0)
+        Menu, Tray, Icon, %A_ScriptDir%\icons\pineapple.ico
     FaceHive()
     KeyPress("d", 6969)
     KeyPress("w", 1000)
@@ -1452,7 +1666,8 @@ PineapplePatch(field_loops:=25)
 ; Navigates to, and farms in, the pumpkin patch
 PumpkinPatch(field_loops:=20)
 {
-    Menu, Tray, Icon, %A_ScriptDir%\icons\pumpkin.ico
+    If (field_loops > 0)
+        Menu, Tray, Icon, %A_ScriptDir%\icons\pumpkin.ico
     ResetCharacter()
     FaceHive(false)
     MoveToSlot(3)
@@ -1474,7 +1689,8 @@ PumpkinPatch(field_loops:=20)
 ; Navigates to, and farms in, the rose field
 RoseField(field_loops:=20)
 {
-    Menu, Tray, Icon, %A_ScriptDir%\icons\rose.ico
+    If (field_loops > 0)
+        Menu, Tray, Icon, %A_ScriptDir%\icons\rose.ico
     FaceHive()
     KeyPress("d", 6969)
     RotateCamera(4)
@@ -1497,7 +1713,8 @@ RoseField(field_loops:=20)
 ; Navigates to, and farms in, the spider field
 SpiderField(field_loops:=30)
 {
-    Menu, Tray, Icon, %A_ScriptDir%\icons\spider.ico
+    If (field_loops > 0)
+        Menu, Tray, Icon, %A_ScriptDir%\icons\spider.ico
     ResetCharacter()
     FaceHive(false)
     MoveToSlot(3)
@@ -1514,7 +1731,8 @@ SpiderField(field_loops:=30)
 ; Navigates to, and farms in, the strawberry field
 StrawberryField(field_loops:=30)
 {
-    Menu, Tray, Icon, %A_ScriptDir%\icons\strawberry.ico
+    If (field_loops > 0)
+        Menu, Tray, Icon, %A_ScriptDir%\icons\strawberry.ico
     ResetCharacter()
     FaceHive(false)
     MoveToSlot(3)
@@ -1531,7 +1749,8 @@ StrawberryField(field_loops:=30)
 ; Navigates to, and farms in, the stump field
 StumpField(field_loops:=25)
 {
-    Menu, Tray, Icon, %A_ScriptDir%\icons\stump.ico
+    If (field_loops > 0)
+        Menu, Tray, Icon, %A_ScriptDir%\icons\stump.ico
     FaceHive()
     KeyPress("d", 6969)
     KeyPress("w", 1000)
@@ -1554,7 +1773,8 @@ StumpField(field_loops:=25)
 ; Navigates to, and farms in, the sunflower field
 SunflowerField(field_loops:=30)
 {
-    Menu, Tray, Icon, %A_ScriptDir%\icons\sunf.ico
+    If (field_loops > 0)
+        Menu, Tray, Icon, %A_ScriptDir%\icons\sunf.ico
     FaceHive()
     KeyPress("d", 6969)
     RotateCamera(4)
