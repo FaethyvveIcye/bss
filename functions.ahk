@@ -62,6 +62,8 @@ HarvestPlanter(planter_number)
                 Sleep, 1000
                 Click, Left
                 MouseMove, MouseX, MouseY
+                Cooldowns_planter%planter_number% := A_NowUTC
+                EnvSub, Cooldowns_planter%planter_number%, Planters_planter%planter_number%_reuse_time[each], Minutes
                 EnvAdd, Cooldowns_planter%planter_number%, 15, Minutes
                 UpdateIniFromGlobals()
                 Return False
@@ -70,7 +72,7 @@ HarvestPlanter(planter_number)
                 If (Planters_planter%planter_number%_fields.Length() == 1)
                 {
                     KeyPress(Hotkeys_planter%planter_number%)
-                    Planters_planter%planter_number%_current_field := %field%
+                    Planters_planter%planter_number%_current_field := field
                     Cooldowns_planter%planter_number% := A_NowUTC
                     UpdateIniFromGlobals()
                     to_return := False
@@ -407,8 +409,6 @@ WealthClock()
         Return
 
     Menu, Tray, Icon, %A_ScriptDir%\icons\clock.ico
-    Cooldowns_wealthclock := A_NowUTC
-    UpdateIniFromGlobals()
 
     ResetCharacter(3)    ; extra resets prevent haste problems & bear morph reset glitches
     FaceHive(false)
@@ -425,6 +425,8 @@ WealthClock()
     {
         KeyPress("e", 50)
     }
+    Cooldowns_wealthclock := A_NowUTC
+    UpdateIniFromGlobals()
     ResetCharacter()
 }
 
@@ -436,8 +438,6 @@ WealthClock()
         Return
 
     Menu, Tray, Icon, %A_ScriptDir%\icons\clock.ico
-    Cooldowns_wealthclock := A_NowUTC
-    UpdateIniFromGlobals()
     FaceHive(false)
     Sleep, 500
     KeyPress("s", 100)
@@ -477,6 +477,8 @@ WealthClock()
     {
         KeyPress("e", 50)
     }
+    Cooldowns_wealthclock := A_NowUTC
+    UpdateIniFromGlobals()
     Send, {w up}
     ResetCharacter()
 }
@@ -489,8 +491,6 @@ AntPass()
         Return
 
     Menu, Tray, Icon, %A_ScriptDir%\icons\ant.ico
-    Cooldowns_antpass := A_NowUTC
-    UpdateIniFromGlobals()
     FaceHive()
     KeyPress("w", 100)
     KeyPress("w", 700)
@@ -517,6 +517,8 @@ AntPass()
         KeyPress("d", 100)
         KeyPress("e")
     }
+    Cooldowns_antpass := A_NowUTC
+    UpdateIniFromGlobals()
     Sleep, 1000
     UnStickIfStuck()
     ResetCharacter()
