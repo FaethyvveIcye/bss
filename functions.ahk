@@ -6,6 +6,7 @@ If (GetConfigVersion() != 1)
     ExitApp
 }
 UpdateGlobalsFromIni()
+ReleaseHeldKeysAndMouse()
 
 ; Helper function to press a given key for a duration, similar to the JitBit function of the same name
 KeyPress(key, duration:=0)
@@ -14,6 +15,14 @@ KeyPress(key, duration:=0)
     Send, {%key% down}
     Sleep, (duration * Stats_movespeed_factor)
     Send, {%key% up}
+}
+
+; Releases any potentially unreleased keys or clicks
+ReleaseHeldKeysAndMouse()
+{
+    Click, Up
+    For each, key in ["w","a","s","d", "space"]
+        Send, {%key% up}
 }
 
 ; Helper function to assist in adding timers to different activities
@@ -1333,8 +1342,8 @@ HoneydayCandles()
     CircleForLoot()
 }
 
-; Places sprinklers then snakes the field for pollen, optionally stopping if bag is full
-GatherFieldPollen(stop_on_full_bag:=True, vertical_length:=300, horizontal_length:=100, field_loops:=20, snakes:=4, inch_forwards:=False, inch_left:=False, inch_right:=False, inch_backwards:=False)
+; Places sprinklers then snakes the field for pollen, optionally stopping if bag is full, realigning against the walls
+GatherFieldPollen(stop_on_full_bag:=True, vertical_length:=300, horizontal_length:=100, field_loops:=20, snakes:=4, front_wall:=False, left_wall:=False, right_wall:=False, back_wall:=False, realign_distance:=400, realign_frequency:=5)
 {
     If (%field_loops% == 0)
         Return
@@ -1345,33 +1354,47 @@ GatherFieldPollen(stop_on_full_bag:=True, vertical_length:=300, horizontal_lengt
     If (ErrorLevel == 0)
         Return
 
+    ; if there is a wall, we want to start close to it, then realign on it at the end of a few loops
     Click, Down
-    KeyPress("a", horizontal_length*snakes)
-    KeyPress("s", vertical_length/2)
+    KeyPress(right_wall ? "d" : "a", horizontal_length*snakes)
+    KeyPress(front_wall ? "w" : "s", vertical_length/2)
+        
     Loop, %field_loops%
     {
-        ; right movement
+        ; away from walls
         Loop, %snakes%
         {
-            KeyPress("d", (inch_right ? horizontal_length*1.03 : horizontal_length))
-            KeyPress("w", (inch_forwards ? vertical_length*1.03 : vertical_length))
-            KeyPress("d", (inch_right ? horizontal_length*1.03 : horizontal_length))
-            KeyPress("s", (inch_backwards ? vertical_length*1.03 : vertical_length))
+            KeyPress(right_wall ? "a" : "d", horizontal_length)
+            KeyPress(front_wall ? "s" : "w", vertical_length)
+            KeyPress(right_wall ? "a" : "d", horizontal_length)
+            KeyPress(front_wall ? "w" : "s", vertical_length)
         }
-        If (stop_on_full_bag && IsBagFull())
-            break
 
-        ; left movement
+        ; towards walls
         Loop, %snakes%
         {
-            KeyPress("a", (inch_left ? horizontal_length*1.03 : horizontal_length))
-            KeyPress("w", (inch_forwards ? vertical_length*1.03 : vertical_length))
-            KeyPress("a", (inch_left ? horizontal_length*1.03 : horizontal_length))
-            KeyPress("s", (inch_backwards ? vertical_length*1.03 : vertical_length))
+            KeyPress(right_wall ? "d" : "a", horizontal_length)
+            KeyPress(front_wall ? "s" : "w", vertical_length)
+            KeyPress(right_wall ? "d" : "a", horizontal_length)
+            KeyPress(front_wall ? "w" : "s", vertical_length)
         }
-        If (stop_on_full_bag && IsBagFull())
-            break
 
+        ; realignment or bag check
+        Switch Mod(A_Index, realign_frequency)
+        {
+            Case 0:
+                KeyPress("w", realign_distance * (front_wall ? 1.2 : 0))
+                KeyPress("a", realign_distance * (left_wall ? 1.2 : 0))
+                KeyPress("s", realign_distance * (back_wall ? 1.2 : 0))
+                KeyPress("d", realign_distance * (right_wall ? 1.2 : 0))
+                KeyPress("d", realign_distance * (left_wall ? 1 : 0))
+                KeyPress("s", realign_distance * (front_wall ? 1 : 0))
+                KeyPress("a", realign_distance * (right_wall ? 1 : 0))
+                KeyPress("w", realign_distance * (back_wall ? 1 : 0))
+            Default:
+                If (stop_on_full_bag && IsBagFull()) then
+                    break
+        }
     }
     Click, Up
 }
@@ -1390,7 +1413,7 @@ BambooField(field_loops:=30)
     KeyPress("d", 9500)
     KeyPress("w", 1300)
     ZoomOut(5)
-    GatherFieldPollen(True, 650, 125, field_loops, 2, True)
+    GatherFieldPollen(True, 650, 120, field_loops, 2)
     UnStickIfStuck()
 }
 
@@ -1413,7 +1436,7 @@ BlueFlowerField(field_loops:=30)
 }
 
 ; Navigates to, and farms in, the cactus field
-CactusField(field_loops:=20)
+CactusField(field_loops:=30)
 {
     If (field_loops > 0)
         Menu, Tray, Icon, %A_ScriptDir%\icons\cactus.ico
@@ -1484,12 +1507,12 @@ CoconutField(field_loops:=20)
     KeyPress("a", 1000)
     RotateCamera(6)
     ZoomOut(5)
-    GatherFieldPollen(True, 600, 110, field_loops, 2, True)
+    GatherFieldPollen(True, 600, 110, field_loops, 2, True, False, True)
     UnStickIfStuck()
 }
 
 ; Navigates to, and farms in, the dandelion field
-DandelionField(field_loops:=30)
+DandelionField(field_loops:=35)
 {
     If (field_loops > 0)
         Menu, Tray, Icon, %A_ScriptDir%\icons\dandelion.ico
@@ -1503,25 +1526,26 @@ DandelionField(field_loops:=30)
 }
 
 ; Navigates to, and farms in, the mountain top field
-MountainTopField(field_loops:=20)
+MountainTopField(field_loops:=25)
 {
     If (field_loops > 0)
         Menu, Tray, Icon, %A_ScriptDir%\icons\mountain.ico
-    FaceHive()
-    KeyPress("d", 6969)
-    KeyPress("w", 1000)
-    Sleep, 6969
+    ResetCharacter()
+    FaceHive(false)
+    MoveToSlot(0)
+    KeyPress("s", 1000)
     Jump()
-    KeyPress("d", 1500)
+    KeyPress("a", 1500)
+    RotateCamera(2)
     Loop, 5
     {
         KeyPress("e")
     }
     ZoomOut(5)
     Sleep, 2500
-    KeyPress("w", 700)
-    RotateCamera(6)
-    GatherFieldPollen(True, 300, 110, field_loops, 4)
+    KeyPress("a", 700)
+    RotateCamera(4)
+    GatherFieldPollen(True, 300, 110, field_loops, 4, True, False, False, False, 1000, 8)
     UnStickIfStuck()
 }
 
@@ -1603,7 +1627,7 @@ PineTreeForest(field_loops:=35)
     KeyPress("a", 420)
     KeyPress("s", 420*2)
     Sleep, 100
-    GatherFieldPollen(True, 650, 125, field_loops, 2, True)
+    GatherFieldPollen(True, 650, 125, field_loops, 2, True, False, True, False)
     UnStickIfStuck()
 }
 
@@ -1634,7 +1658,7 @@ PineTreeForestTidePopper(field_loops:=150, use_shiftlock:=True)
     KeyPress("a", 1000)
     If (use_shiftlock)
         Send, LShift
-    GatherFieldPollen(True, 500, 120, field_loops, 2, False, False, True)
+    GatherFieldPollen(True, 500, 120, field_loops, 2, False, False, True, True)
     If (use_shiftlock)
         Send, LShift
     UnStickIfStuck()
@@ -1645,19 +1669,19 @@ PineapplePatch(field_loops:=25)
 {
     If (field_loops > 0)
         Menu, Tray, Icon, %A_ScriptDir%\icons\pineapple.ico
-    FaceHive()
-    KeyPress("d", 6969)
-    KeyPress("w", 1000)
-    Sleep, 6969
+    ResetCharacter()
+    FaceHive(false)
+    MoveToSlot(0)
+    KeyPress("s", 1000)
     Jump()
-    KeyPress("d", 1500)
-    RotateCamera(2)
-    ZoomOut(5)
+    KeyPress("a", 1500)
+    RotateCamera(6)
     Loop, 5
     {
         KeyPress("e")
     }
     Sleep, 2500
+    ZoomOut(5)
     KeyPress("w", 4500)
     RotateCamera(2)
     KeyPress("w", 1600)
@@ -1693,9 +1717,9 @@ RoseField(field_loops:=20)
 {
     If (field_loops > 0)
         Menu, Tray, Icon, %A_ScriptDir%\icons\rose.ico
-    FaceHive()
-    KeyPress("d", 6969)
-    RotateCamera(4)
+    ResetCharacter()
+    FaceHive(false)
+    MoveToSlot(0)
     KeyPress("w", 4000)
     KeyPress("s", 100)
     Sleep, 500
@@ -1708,7 +1732,7 @@ RoseField(field_loops:=20)
     KeyPress("d", 2100)
     RotateCamera(4)
     ZoomOut(5)
-    GatherFieldPollen(True, 600, 110, field_loops, 2, True)
+    GatherFieldPollen(True, 600, 110, field_loops, 2, True, True)
     UnStickIfStuck()
 }
 
@@ -1726,7 +1750,7 @@ SpiderField(field_loops:=30)
     KeyPress("d", 2600)
     KeyPress("w", 1300)
     ZoomOut(5)
-    GatherFieldPollen(True, 650, 125, field_loops, 2, True)
+    GatherFieldPollen(True, 650, 125, field_loops, 2, True, True)
     UnStickIfStuck()
 }
 
@@ -1744,7 +1768,7 @@ StrawberryField(field_loops:=30)
     KeyPress("a", 4000)
     ZoomOut(5)
     RotateCamera(2)
-    GatherFieldPollen(True, 650, 125, field_loops, 2, True)
+    GatherFieldPollen(True, 650, 125, field_loops, 3, True, False, True)
     UnStickIfStuck()
 }
 
@@ -1753,18 +1777,19 @@ StumpField(field_loops:=25)
 {
     If (field_loops > 0)
         Menu, Tray, Icon, %A_ScriptDir%\icons\stump.ico
-    FaceHive()
-    KeyPress("d", 6969)
-    KeyPress("w", 1000)
+    ResetCharacter()
+    FaceHive(false)
+    MoveToSlot(0)
+    KeyPress("s", 1000)
     Jump()
-    KeyPress("d", 1500)
-    RotateCamera(2)
-    ZoomOut(5)
+    KeyPress("a", 1500)
+    RotateCamera(6)
     Loop, 5
     {
         KeyPress("e")
     }
     Sleep, 2500
+    ZoomOut(5)
     KeyPress("w", 12750)
     Keypress("d", 500)
     Sleep, 500
@@ -1788,6 +1813,6 @@ SunflowerField(field_loops:=30)
     RotateCamera(2)
     KeyPress("w", 300)
     ZoomOut(5)
-    GatherFieldPollen(True, 300, 100, field_loops)
+    GatherFieldPollen(True, 300, 100, field_loops, 3, True, False, False, False, 200, 6)
     UnStickIfStuck()
 }
