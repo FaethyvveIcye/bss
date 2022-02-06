@@ -1384,13 +1384,13 @@ GatherFieldPollen(stop_on_full_bag:=True, vertical_length:=300, horizontal_lengt
         {
             Case 0:
                 KeyPress("w", realign_distance * (front_wall ? 1.2 : 0))
-                KeyPress("a", realign_distance * (left_wall ? 1.2 : 0))
-                KeyPress("s", realign_distance * (back_wall ? 1.2 : 0))
                 KeyPress("d", realign_distance * (right_wall ? 1.2 : 0))
-                KeyPress("d", realign_distance * (left_wall ? 1 : 0))
-                KeyPress("s", realign_distance * (front_wall ? 1 : 0))
-                KeyPress("a", realign_distance * (right_wall ? 1 : 0))
+                KeyPress("s", realign_distance * (back_wall ? 1.2 : 0))
+                KeyPress("a", realign_distance * (left_wall ? 1.2 : 0))
                 KeyPress("w", realign_distance * (back_wall ? 1 : 0))
+                KeyPress("a", realign_distance * (right_wall ? 1 : 0))
+                KeyPress("s", realign_distance * (front_wall ? 1 : 0))
+                KeyPress("d", realign_distance * (left_wall ? 1 : 0))
             Default:
                 If (stop_on_full_bag && IsBagFull()) then
                     break
@@ -1627,7 +1627,7 @@ PineTreeForest(field_loops:=35)
     KeyPress("a", 420)
     KeyPress("s", 420*2)
     Sleep, 100
-    GatherFieldPollen(True, 650, 125, field_loops, 2, True, False, True, False)
+    GatherFieldPollen(True, 400, 100, field_loops, 3, True, False, True, False, 300, 10)
     UnStickIfStuck()
 }
 
@@ -1658,7 +1658,7 @@ PineTreeForestTidePopper(field_loops:=150, use_shiftlock:=True)
     KeyPress("a", 1000)
     If (use_shiftlock)
         Send, LShift
-    GatherFieldPollen(True, 500, 120, field_loops, 2, False, False, True, True)
+    GatherFieldPollen(True, 500, 120, field_loops, 2, False, False, True, True, 300, 10)
     If (use_shiftlock)
         Send, LShift
     UnStickIfStuck()
