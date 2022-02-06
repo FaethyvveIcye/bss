@@ -1800,6 +1800,24 @@ StumpField(field_loops:=25)
     UnStickIfStuck()
 }
 
+; Navigates to, and sits in, the stump field
+StumpSnail(minutes_to_stand_in_stump:=10)
+{
+    Menu, Tray, Icon, %A_ScriptDir%\icons\stump.ico
+    StumpField(0)
+    Sleep, 500
+    PlaceSprinklers()
+    Sleep, 500
+    Click, Down
+    Loop, %minutes_to_stand_in_stump%
+    {
+        Sleep, 60 * 1000
+        Jump()
+    }
+    Click, Up
+    UnStickIfStuck()
+}
+
 ; Navigates to, and farms in, the sunflower field
 SunflowerField(field_loops:=30)
 {
