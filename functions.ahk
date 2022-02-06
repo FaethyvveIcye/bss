@@ -356,16 +356,19 @@ EmptyHiveBalloon(reset_after_emptying:=false)
     KeyPress("e")
     Cooldowns_balloon := A_NowUTC
     UpdateIniFromGlobals()
-    Loop, 600
+    Loop, 1200
     {
-        Sleep, 1000
+        Sleep, 500
         ImageSearch, FoundX, FoundY, A_ScreenWidth//3, 0, A_ScreenWidth, A_ScreenHeight//3, *90 %A_ScriptDir%\images\making_honey_from_balloon.png
         If (ErrorLevel != 0)
             Break
     }
 
     If (reset_after_emptying)
-        ResetCharacter()
+    {
+        Jump()
+        ResetCharacter(2)
+    }
 }
 
 ; Uses a Whirligig or resets if it's on cooldown
