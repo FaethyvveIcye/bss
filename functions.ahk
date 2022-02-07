@@ -342,9 +342,6 @@ UnStickIfStuck()
 ; Empties the hive balloon - does not reset your character first
 EmptyHiveBalloon(reset_after_emptying:=false)
 {
-    If (MinutesSince(Cooldowns_balloon) < 5)
-        Return
-
     If (MinutesSince(Cooldowns_whirligig) > 1)
         FaceHive()
 
@@ -366,7 +363,7 @@ EmptyHiveBalloon(reset_after_emptying:=false)
 
     If (reset_after_emptying)
     {
-        Jump()
+        Jump(200)
         ResetCharacter(2)
     }
 }
@@ -1346,7 +1343,7 @@ HoneydayCandles()
 }
 
 ; Places sprinklers then snakes the field for pollen, optionally stopping if bag is full, realigning against the walls
-GatherFieldPollen(stop_on_full_bag:=True, vertical_length:=300, horizontal_length:=100, field_loops:=20, snakes:=4, front_wall:=False, left_wall:=False, right_wall:=False, back_wall:=False, realign_distance:=400, realign_frequency:=5)
+GatherFieldPollen(stop_on_full_bag:=True, vertical_length:=300, horizontal_length:=100, field_loops:=20, snakes:=4, front_wall:=False, left_wall:=False, right_wall:=False, back_wall:=False, realign_distance:=400, realign_frequency:=5, realign_factor:=1.4)
 {
     If (%field_loops% == 0)
         Return
@@ -1386,14 +1383,18 @@ GatherFieldPollen(stop_on_full_bag:=True, vertical_length:=300, horizontal_lengt
         Switch Mod(A_Index, realign_frequency)
         {
             Case 0:
-                KeyPress("w", realign_distance * (front_wall ? 1.2 : 0))
-                KeyPress("d", realign_distance * (right_wall ? 1.2 : 0))
-                KeyPress("s", realign_distance * (back_wall ? 1.2 : 0))
-                KeyPress("a", realign_distance * (left_wall ? 1.2 : 0))
-                KeyPress("w", realign_distance * (back_wall ? 1 : 0))
-                KeyPress("a", realign_distance * (right_wall ? 1 : 0))
-                KeyPress("s", realign_distance * (front_wall ? 1 : 0))
-                KeyPress("d", realign_distance * (left_wall ? 1 : 0))
+                If (A_Index == field_loops) or !(IsConnected())
+                    break
+                ; into walls
+                front_wall ? KeyPress("w", realign_distance * realign_factor) : 
+                right_wall ? KeyPress("d", realign_distance * realign_factor) : 
+                back_wall ? KeyPress("s", realign_distance * realign_factor) : 
+                left_wall ? KeyPress("a", realign_distance * realign_factor) : 
+                ; back onto field
+                back_wall ? KeyPress("w", realign_distance) : 
+                right_wall ? KeyPress("a", realign_distance) : 
+                front_wall ? KeyPress("s", realign_distance) : 
+                left_wall ? KeyPress("d", realign_distance) : 
             Default:
                 If (stop_on_full_bag && IsBagFull()) then
                     break
