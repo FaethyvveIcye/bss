@@ -8,13 +8,23 @@ If (GetConfigVersion() != 1)
 UpdateGlobalsFromIni()
 ReleaseHeldKeysAndMouse()
 
-; Helper function to press a given key for a duration, similar to the JitBit function of the same name
+; Presses a given key (advised to only use for WASD) for a duration, similar to the JitBit function of the same name
 KeyPress(key, duration:=0)
 {
 
     Send, {%key% down}
     Sleep, (duration * Stats_movespeed_factor)
     Send, {%key% up}
+}
+
+; Presses E
+EPress(amount:=1)
+{
+    Loop, %amount%
+    {
+        Send, {e down}
+        Send, {e up}
+    }
 }
 
 ; Releases any potentially unreleased keys or clicks
@@ -58,10 +68,7 @@ HarvestPlanter(planter_number)
             Menu, Tray, Icon, %A_ScriptDir%\icons\planter_%current_planter%.ico
             ResetCharacter(3)
             %field%(0)  ; dynamically calling the field macro with 0 field loops to navigate to the field
-            Loop, 5
-            {
-                KeyPress("e", 200)
-            }
+            EPress(5)
             Sleep, 1000
             ImageSearch, FoundX, FoundY, 0, 0, A_ScreenWidth, A_ScreenHeight, *90 %A_ScriptDir%\images\planter_still_growing.png
             If (ErrorLevel == 0)
@@ -184,11 +191,8 @@ Reconnect()
 
     KeyPress("w", 5000)
     KeyPress("s", 800)
-    (Stats_hive_slot < 3) ? KeyPress("d", (1200 * (3 - Stats_hive_slot))) : KeyPress("a", (1200 * (Stats_hive_slot - 3)))
-    Loop, 5
-    {
-        KeyPress("e")
-    }
+    (Stats_hive_slot < 3) ? KeyPress("d", (1200 * (3 - Stats_hive_slot))) : KeyPress("a", (1200 * (Stats_hive_slot - 3)))   ; reversed-camera MoveToSlot() from the middle spawn-in location
+    EPress()
     MouseMove, A_ScreenWidth//2, A_ScreenHeight//2
     ResetCharacter()
     Return
@@ -212,9 +216,13 @@ IsBagFull()
 ; Rotates the camera one (or more) times
 RotateCamera(times:=1)
 {
-    Loop, %times%
+    If times == 0
+        Return
+
+    camera_rotation_loops := Mod(Abs(times), 8)
+    Loop, %camera_rotation_loops%
     {
-        KeyPress(",")
+        KeyPress(times > 0 ? "," : ".")
     }
 }
 
@@ -282,16 +290,6 @@ FaceHive(should_face_hive:=true)
                 Return
             }
             
-            /*
-            ImageSearch, FoundX, FoundY, 0, A_ScreenHeight//2, A_ScreenWidth//2, A_ScreenHeight, *90 %A_ScriptDir%\images\hivecomb2.png
-            If (ErrorLevel == 0)
-                break
-            
-            ImageSearch, FoundX, FoundY, 0, A_ScreenHeight//2, A_ScreenWidth//2, A_ScreenHeight, *90 %A_ScriptDir%\images\hivecomb3.png
-            If (ErrorLevel == 0)
-                break
-            */
-            
             RotateCamera(4)
             Sleep, 1000
         }
@@ -306,6 +304,17 @@ MoveToSlot(new_slot)
 {
     distance_between_slots := 1200
     (Stats_hive_slot < new_slot) ? KeyPress("d", (distance_between_slots * (new_slot - Stats_hive_slot))) : KeyPress("a", (distance_between_slots * (Stats_hive_slot - new_slot)))
+}
+
+; Walks from the hive to the red cannon and fires it
+MoveToAndFireRedCannon()
+{
+    FaceHive(false)
+    MoveToSlot(0)
+    KeyPress("s", 1000)
+    Jump()
+    KeyPress("a", 1500)
+    EPress(5)
 }
 
 ; Helper function that checks to see if you're stuck in a shop / dispenser
@@ -326,7 +335,7 @@ IsStuck()
 UnStick()
 {
     Sleep, 100
-    KeyPress("e")
+    EPress()
     Sleep, 1000
     If (IsStuck())
         Reconnect()
@@ -350,7 +359,7 @@ EmptyHiveBalloon(reset_after_emptying:=false)
     If (ErrorLevel != 0)
         Return
 
-    KeyPress("e")
+    EPress()
     Cooldowns_balloon := A_NowUTC
     UpdateIniFromGlobals()
     Loop, 1200
@@ -424,16 +433,13 @@ WealthClock()
     Sleep, 500
     MoveToSlot(5.5)
     KeyPress("w", 5000)
-    RotateCamera(6)
+    RotateCamera(-2)
     Sleep, 500
     Send, {w down}
     Jump(17000*Stats_movespeed_factor)
     Send, {w up}
-    Sleep, 1000
-    Loop, 20
-    {
-        KeyPress("e", 50)
-    }
+    Sleep, 1500
+    EPress(20)
     Cooldowns_wealthclock := A_NowUTC
     UpdateIniFromGlobals()
     ResetCharacter()
@@ -484,7 +490,8 @@ WealthClock()
     Jump()
     Loop, 50
     {
-        KeyPress("e", 50)
+        EPress()
+        Sleep, 50
     }
     Cooldowns_wealthclock := A_NowUTC
     UpdateIniFromGlobals()
@@ -524,7 +531,7 @@ AntPass()
     Loop, 5
     {
         KeyPress("d", 100)
-        KeyPress("e")
+        EPress()
     }
     Cooldowns_antpass := A_NowUTC
     UpdateIniFromGlobals()
@@ -668,7 +675,7 @@ BugRun()
     KeyPress("d", 12000)
     KeyPress("s", 6969)
     KeyPress("a", 1200)
-    RotateCamera(7)
+    RotateCamera(-1)
     KeyPress("w", 400)
     RotateCamera(1)
     Loop
@@ -676,7 +683,7 @@ BugRun()
         Loop, 3
         {
             Sleep, 1000
-            KeyPress("e", 1000)
+            EPress()
             Sleep, 1000
             Loop, 10
             {
@@ -700,7 +707,7 @@ BugRun()
     KeyPress("w", 200)
     Jump()
     KeyPress("w", 8000)
-    RotateCamera(5)
+    RotateCamera(-3)
     KeyPress("a", 1500)
     Menu, Tray, Icon, %A_ScriptDir%\icons\vicious.ico
     KeyPress("d", 1000)
@@ -847,16 +854,9 @@ Mondo()
     Cooldowns_mondo := A_NowUTC
     UpdateIniFromGlobals()
 
-    ResetCharacter(2)    ; extra resets prevent bear morph reset glitches
-    FaceHive()
-    KeyPress("d", 8000)
-    KeyPress("w", 1000)
-    Jump()
-    KeyPress("d", 1500)
-    Loop, 5
-    {
-        KeyPress("e")
-    }
+    ResetCharacter(3)
+    MoveToAndFireRedCannon()
+    RotateCamera(4)
     ZoomOut(5)
     Sleep, 2200
     KeyPress("w", 3200)
@@ -951,18 +951,18 @@ AntChallenge()
     Jump()
     KeyPress("w", 2100)
     KeyPress("a", 8000)
-    RotateCamera(7)
+    RotateCamera(-1)
     KeyPress("w", 2900)
     KeyPress("d", 200)
     RotateCamera(1)
-    Loop, 5
-    {
-        KeyPress("e")
-    }
+    EPress(5)
     Sleep, 1000
     KeyPress("s", 1500)
+    Sleep, 100
     KeyPress("w", 100)
+    Sleep, 100
     KeyPress("d", 100)
+    Sleep, 100
     PlaceSprinklers()
     Click, Down
     Sleep, 5 * 60 * 1000
@@ -992,10 +992,7 @@ BlueFieldBooster()
     KeyPress("s", 1500)
     KeyPress("a", 3200)
     KeyPress("w", 2200)
-    Loop, 5
-    {
-        KeyPress("e", 50)
-    }
+    EPress(5)
     Cooldowns_blue_field_booster := A_NowUTC
     UpdateIniFromGlobals()
 }
@@ -1024,10 +1021,7 @@ RedFieldBooster()
     Jump()
     KeyPress("w", 2500)
     KeyPress("a", 1000)
-    Loop, 5
-    {
-        KeyPress("e", 50)
-    }
+    EPress(5)
     Cooldowns_red_field_booster := A_NowUTC
     UpdateIniFromGlobals()
 }
@@ -1080,7 +1074,7 @@ WindShrine(item_index:=0, item_amount:=1)
     KeyPress("w", 600)
     Sleep, 1000
     ; Donation
-    KeyPress("e", 50)
+    EPress()
     MouseGetPos, MouseOriginalX, MouseOriginalY
     MouseMove, 100, 100
     Sleep, 1000
@@ -1165,17 +1159,14 @@ Stockings()
     Sleep, 500
     MoveToSlot(5.5)
     KeyPress("w", 4000)
-    RotateCamera(6)
+    RotateCamera(-2)
     Sleep, 500
     KeyPress("w", 6000)
     Sleep, 100
     Jump()
     KeyPress("w", 5000)
     KeyPress("d", 500)
-    Loop, 5
-    {
-        KeyPress("e", 50)
-    }
+    EPress(5)
     Cooldowns_stockings := A_NowUTC
     UpdateIniFromGlobals()
     KeyPress("w", 1000)
@@ -1191,15 +1182,7 @@ BeesmasFeast()
 
     Menu, Tray, Icon, %A_ScriptDir%\icons\polar_bear.ico
     ResetCharacter(3)
-    FaceHive(false)
-    MoveToSlot(0)
-    KeyPress("s", 1000)
-    Jump()
-    KeyPress("a", 1500)
-    Loop, 5
-    {
-        KeyPress("e")
-    }
+    MoveToAndFireRedCannon()
     Sleep, 700
     Jump()
     Jump()
@@ -1211,10 +1194,7 @@ BeesmasFeast()
     Sleep, 100
     Jump()
     KeyPress("w", 900)
-    Loop, 5
-    {
-        KeyPress("e", 50)
-    }
+    EPress(5)
     Cooldowns_beesmas_feast := A_NowUTC
     UpdateIniFromGlobals()
     Sleep, 1500
@@ -1229,16 +1209,8 @@ Samovar()
 
     Menu, Tray, Icon, %A_ScriptDir%\icons\dapper_bear.ico
     ResetCharacter(2)
-    FaceHive(false)
-    MoveToSlot(0)
-    KeyPress("s", 1000)
-    Jump()
-    KeyPress("a", 1500)
-    RotateCamera(6)
-    Loop, 5
-    {
-        KeyPress("e")
-    }
+    MoveToAndFireRedCannon()
+    RotateCamera(-2)
     Sleep, 2500
     KeyPress("w", 12400)
     RotateCamera(2)
@@ -1248,7 +1220,7 @@ Samovar()
     Jump()
     KeyPress("w", 2000)
     KeyPress("s", 100)
-    RotateCamera(7)
+    RotateCamera(-1)
     Sleep, 100
     Jump()
     KeyPress("a", 775)
@@ -1256,10 +1228,7 @@ Samovar()
     Sleep, 100
     Jump()
     KeyPress("w", 950)
-    Loop, 5
-    {
-        KeyPress("e", 50)
-    }
+    EPress(5)
     Cooldowns_samovar := A_NowUTC
     UpdateIniFromGlobals()
     Sleep, 3000
@@ -1274,15 +1243,7 @@ LidArt()
 
     Menu, Tray, Icon, %A_ScriptDir%\icons\onett.ico
     ResetCharacter(3)
-    FaceHive(false)
-    MoveToSlot(0)
-    KeyPress("s", 1000)
-    Jump()
-    KeyPress("a", 1500)
-    Loop, 5
-    {
-        KeyPress("e")
-    }
+    MoveToAndFireRedCannon()
     Sleep, 2500
     KeyPress("w", 2000)
     KeyPress("a", 2500)
@@ -1295,10 +1256,7 @@ LidArt()
     Jump()
     KeyPress("w", 300)
     Sleep, 1000
-    Loop, 5
-    {
-        KeyPress("e", 50)
-    }
+    EPress(5)
     Cooldowns_lid_art := A_NowUTC
     UpdateIniFromGlobals()
     Sleep, 3000
@@ -1331,10 +1289,7 @@ HoneydayCandles()
     KeyPress("w", 4200)
     KeyPress("a", 3350)
     KeyPress("w", 2000)
-    Loop, 5
-    {
-        KeyPress("e", 50)
-    }
+    EPress(5)
     Cooldowns_honeyday_candles := A_NowUTC
     UpdateIniFromGlobals()
     Sleep, 5000
@@ -1343,7 +1298,7 @@ HoneydayCandles()
 }
 
 ; Places sprinklers then snakes the field for pollen, optionally stopping if bag is full, realigning against the walls
-GatherFieldPollen(stop_on_full_bag:=True, vertical_length:=300, horizontal_length:=100, field_loops:=20, snakes:=4, front_wall:=False, left_wall:=False, right_wall:=False, back_wall:=False, realign_distance:=400, realign_frequency:=5, realign_factor:=1.4)
+GatherFieldPollen(stop_on_full_bag:=True, vertical_length:=300, horizontal_length:=100, field_loops:=20, snakes:=4, front_wall:=False, left_wall:=False, right_wall:=False, back_wall:=False, realign_distance:=400, realign_frequency:=5)
 {
     If (%field_loops% == 0)
         Return
@@ -1356,6 +1311,7 @@ GatherFieldPollen(stop_on_full_bag:=True, vertical_length:=300, horizontal_lengt
 
     ; if there is a wall, we want to start close to it, then realign on it at the end of a few loops
     Click, Down
+    realign_factor := 1 + 0.1 * realign_frequency
     KeyPress(right_wall ? "d" : "a", horizontal_length*snakes)
     KeyPress(front_wall ? "w" : "s", vertical_length/2)
         
@@ -1509,7 +1465,7 @@ CoconutField(field_loops:=20)
     }
     KeyPress("w", 1000)
     KeyPress("a", 1000)
-    RotateCamera(6)
+    RotateCamera(-2)
     ZoomOut(5)
     GatherFieldPollen(True, 600, 110, field_loops, 2, True, False, True)
     UnStickIfStuck()
@@ -1535,16 +1491,8 @@ MountainTopField(field_loops:=25)
     If (field_loops > 0)
         Menu, Tray, Icon, %A_ScriptDir%\icons\mountain.ico
     ResetCharacter()
-    FaceHive(false)
-    MoveToSlot(0)
-    KeyPress("s", 1000)
-    Jump()
-    KeyPress("a", 1500)
+    MoveToAndFireRedCannon()
     RotateCamera(2)
-    Loop, 5
-    {
-        KeyPress("e")
-    }
     ZoomOut(5)
     Sleep, 2500
     KeyPress("a", 700)
@@ -1598,7 +1546,7 @@ PepperPatch(field_loops:=20)
     Jump()
     KeyPress("d", 1500)
     KeyPress("s", 500)
-    RotateCamera(6)
+    RotateCamera(-2)
     ZoomOut(5)
     GatherFieldPollen(True, 300, 110, field_loops)
     UnStickIfStuck()
@@ -1610,16 +1558,8 @@ PineTreeForest(field_loops:=35)
     If (field_loops > 0)
         Menu, Tray, Icon, %A_ScriptDir%\icons\pine.ico
     ResetCharacter()
-    FaceHive(false)
-    MoveToSlot(0)
-    KeyPress("s", 1000)
-    Jump()
-    KeyPress("a", 1500)
+    MoveToAndFireRedCannon()
     RotateCamera(2)
-    Loop, 5
-    {
-        KeyPress("e")
-    }
     Sleep, 2500
     ZoomOut(5)
     KeyPress("d", 800)
@@ -1641,16 +1581,8 @@ PineTreeForestTidePopper(field_loops:=150, use_shiftlock:=True)
     If (field_loops > 0)
         Menu, Tray, Icon, %A_ScriptDir%\icons\pine.ico
     ResetCharacter()
-    FaceHive(false)
-    MoveToSlot(0)
-    KeyPress("s", 1000)
-    Jump()
-    KeyPress("a", 1500)
+    MoveToAndFireRedCannon()
     RotateCamera(4)
-    Loop, 5
-    {
-        KeyPress("e")
-    }
     Sleep, 2500
     ZoomOut(5)
     KeyPress("s", 800)
@@ -1674,16 +1606,8 @@ PineapplePatch(field_loops:=25)
     If (field_loops > 0)
         Menu, Tray, Icon, %A_ScriptDir%\icons\pineapple.ico
     ResetCharacter()
-    FaceHive(false)
-    MoveToSlot(0)
-    KeyPress("s", 1000)
-    Jump()
-    KeyPress("a", 1500)
-    RotateCamera(6)
-    Loop, 5
-    {
-        KeyPress("e")
-    }
+    MoveToAndFireRedCannon()
+    RotateCamera(-2)
     Sleep, 2500
     ZoomOut(5)
     KeyPress("w", 4500)
@@ -1782,16 +1706,8 @@ StumpField(field_loops:=25)
     If (field_loops > 0)
         Menu, Tray, Icon, %A_ScriptDir%\icons\stump.ico
     ResetCharacter()
-    FaceHive(false)
-    MoveToSlot(0)
-    KeyPress("s", 1000)
-    Jump()
-    KeyPress("a", 1500)
-    RotateCamera(6)
-    Loop, 5
-    {
-        KeyPress("e")
-    }
+    MoveToAndFireRedCannon()
+    RotateCamera(-2)
     Sleep, 2500
     ZoomOut(5)
     KeyPress("w", 12750)
