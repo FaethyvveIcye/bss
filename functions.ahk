@@ -149,8 +149,11 @@ ManagePlanters()
 
 ; Helper function that checks if you are connected to the game by seeing if your sprinklers on hotkey #1 are visible or not
 IsConnected()
-
 {
+    ; there is no reason chrome should need to steal focus from the user - fix your problematic "feature", Google
+    If WinActive("ahk_exe chrome.exe") && WinExist("ahk_exe RobloxPlayerBeta.exe")
+        WinActivate, ahk_exe RobloxPlayerBeta.exe
+
     ImageSearch, FoundX, FoundY, 0, A_ScreenHeight//2, A_ScreenWidth//2, A_ScreenHeight, *40 %A_ScriptDir%\images\reconnect_sprinkler.png
     Return (ErrorLevel == 0)
 }
