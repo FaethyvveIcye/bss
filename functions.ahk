@@ -1,6 +1,6 @@
 ;; Made by Lessy / Saber
 #Include configuration.ahk
-If (GetConfigVersion() != 1)
+If (GetConfigVersion() != 2)
 {
     MsgBox, Your config.ini file is out of date, please press "OK" then run "reset config.ahk"
     ExitApp
@@ -149,8 +149,11 @@ ManagePlanters()
 
 ; Helper function that checks if you are connected to the game by seeing if your sprinklers on hotkey #1 are visible or not
 IsConnected()
-
 {
+    ; there is no reason chrome should need to steal focus from the user - fix your problematic "feature", Google
+    If WinActive("ahk_exe chrome.exe") && WinExist("ahk_exe RobloxPlayerBeta.exe")
+        WinActivate, ahk_exe RobloxPlayerBeta.exe
+
     ImageSearch, FoundX, FoundY, 0, A_ScreenHeight//2, A_ScreenWidth//2, A_ScreenHeight, *40 %A_ScriptDir%\images\reconnect_sprinkler.png
     Return (ErrorLevel == 0)
 }
@@ -192,6 +195,7 @@ Reconnect()
     KeyPress("w", 5000)
     KeyPress("s", 800)
     (Stats_hive_slot < 3) ? KeyPress("d", (1200 * (3 - Stats_hive_slot))) : KeyPress("a", (1200 * (Stats_hive_slot - 3)))   ; reversed-camera MoveToSlot() from the middle spawn-in location
+    Sleep, 1000
     EPress()
     MouseMove, A_ScreenWidth//2, A_ScreenHeight//2
     ResetCharacter()
@@ -351,10 +355,10 @@ UnStickIfStuck()
 ; Empties the hive balloon - does not reset your character first
 EmptyHiveBalloon(reset_after_emptying:=false)
 {
+    Menu, Tray, Icon, %A_ScriptDir%\icons\balloon.ico
     If (MinutesSince(Cooldowns_whirligig) > 1)
         FaceHive()
 
-    Menu, Tray, Icon, %A_ScriptDir%\icons\balloon.ico
     ImageSearch, FoundX, FoundY, A_ScreenWidth//3, 0, A_ScreenWidth, A_ScreenHeight//3, *90 %A_ScriptDir%\images\can_make_honey_from_balloon.png
     If (ErrorLevel != 0)
         Return
@@ -378,11 +382,11 @@ EmptyHiveBalloon(reset_after_emptying:=false)
 }
 
 ; Uses a Whirligig or resets if it's on cooldown
-WhirligigOrReset(camera_rotations:=0)
+WhirligigOrReset(camera_rotations:=0, from_egg_menu:=false)
 {
     If (MinutesSince(Cooldowns_whirligig) > 5)
     {
-        KeyPress(Hotkeys_whirligig)
+        from_egg_menu ? UseItemFromInventory("whirligig") : KeyPress(Hotkeys_whirligig)
         Cooldowns_whirligig := A_NowUTC
         UpdateIniFromGlobals()
         RotateCamera(camera_rotations)
@@ -442,7 +446,6 @@ WealthClock()
     EPress(20)
     Cooldowns_wealthclock := A_NowUTC
     UpdateIniFromGlobals()
-    ResetCharacter()
 }
 
 /* Non-Beesmas Pathing
@@ -507,6 +510,7 @@ AntPass()
         Return
 
     Menu, Tray, Icon, %A_ScriptDir%\icons\ant.ico
+    ResetCharacter()
     FaceHive()
     KeyPress("w", 100)
     KeyPress("w", 700)
@@ -537,7 +541,6 @@ AntPass()
     UpdateIniFromGlobals()
     Sleep, 1000
     UnStickIfStuck()
-    ResetCharacter()
 }
 
 ; Plays Memory Match - not yet impelmented
@@ -558,6 +561,7 @@ MemoryMatch()
 ; Does a bug run starting from any slot
 BugRun()
 {
+    ResetCharacter(3)
     FaceHive(false)
     MoveToSlot(3)
     Cooldowns_bugrun := A_NowUTC
@@ -567,6 +571,10 @@ BugRun()
     KeyPress("w", 10000)
     KeyPress("s", 100)
     PlaceSprinklers()
+    Sleep, 500
+    ImageSearch, SprinklerX, SprinklerY, A_ScreenWidth//2, A_ScreenHeight//4, A_ScreenWidth, A_ScreenHeight, *90 %A_ScriptDir%\errors\you_must_be_standing_in_a_field_to_build_a_Sprinkler.png
+    If (ErrorLevel == 0)
+        Return
     Loop, 4
     {
         Sleep, 100
@@ -646,6 +654,10 @@ BugRun()
     KeyPress("w", 4000)
     KeyPress("s", 300)
     PlaceSprinklers()
+    Sleep, 500
+    ImageSearch, SprinklerX, SprinklerY, A_ScreenWidth//2, A_ScreenHeight//4, A_ScreenWidth, A_ScreenHeight, *90 %A_ScriptDir%\errors\you_must_be_standing_in_a_field_to_build_a_Sprinkler.png
+    If (ErrorLevel == 0)
+        Return
     Loop, 4
     {
         Sleep, 100
@@ -733,6 +745,10 @@ BugRun()
     KeyPress("a", 3000)
     KeyPress("d", 300)
     PlaceSprinklers()
+    Sleep, 500
+    ImageSearch, SprinklerX, SprinklerY, A_ScreenWidth//2, A_ScreenHeight//4, A_ScreenWidth, A_ScreenHeight, *90 %A_ScriptDir%\errors\you_must_be_standing_in_a_field_to_build_a_Sprinkler.png
+    If (ErrorLevel == 0)
+        Return
     Loop, 5
     {
         Sleep, 100
@@ -748,6 +764,10 @@ BugRun()
     KeyPress("s", 800)
     KeyPress("a", 1000)
     PlaceSprinklers()
+    Sleep, 500
+    ImageSearch, SprinklerX, SprinklerY, A_ScreenWidth//2, A_ScreenHeight//4, A_ScreenWidth, A_ScreenHeight, *90 %A_ScriptDir%\errors\you_must_be_standing_in_a_field_to_build_a_Sprinkler.png
+    If (ErrorLevel == 0)
+        Return
     Loop, 5
     {
         Sleep, 100
@@ -835,7 +855,6 @@ BugRun()
         KeyPress("w", 600)
     }
     UnStickIfStuck()
-    ResetCharacter()
 }
 
 ; Automatically skips if it's not time for Mondo or it's already dead
@@ -1576,7 +1595,7 @@ PineTreeForest(field_loops:=35)
 }
 
 ; Navigates to, and farms in, the pine tree forest in a manner optimal for using the Tide Popper
-PineTreeForestTidePopper(field_loops:=150, use_shiftlock:=True)
+PineTreeForestTidePopper(field_loops:=150, use_extract:=False)
 {
     If (field_loops > 0)
         Menu, Tray, Icon, %A_ScriptDir%\icons\pine.ico
@@ -1592,11 +1611,11 @@ PineTreeForestTidePopper(field_loops:=150, use_shiftlock:=True)
     Send, {Space up}
     Sleep, 500
     KeyPress("a", 1000)
-    If (use_shiftlock)
-        Send, LShift
+    If (use_extract)
+        UseItemFromInventory("blue extract")
+    Send, LShift
     GatherFieldPollen(True, 500, 120, field_loops, 2, False, False, True, True, 300, 10)
-    If (use_shiftlock)
-        Send, LShift
+    Send, LShift
     UnStickIfStuck()
 }
 
@@ -1753,4 +1772,84 @@ SunflowerField(field_loops:=30)
     ZoomOut(5)
     GatherFieldPollen(True, 300, 100, field_loops, 3, True, False, False, False, 200, 6)
     UnStickIfStuck()
+}
+
+; Opens or closes a menu by clicking on it - ie. ClickMenu("Eggs") or ClickMenu("Badges")
+ClickMenu(menu_name)
+{
+    MouseGetPos, MouseX, MouseY
+    MouseMove, Stats_menus[menu_name], Stats_menus["y"]
+    Click, Down
+    Click, Up
+    MouseMove, MouseX, MouseY
+    Sleep, 500
+}
+
+; Opens the inventory, uses an item from it, then closes the inventory - ie. UseItemFromInventory("gumdrops"), UseItemFromInventory("field dice"), or UseItemFromInventory("box-o-frogs")
+UseItemFromInventory(item_name, up_scrolls_before_searching:=60)
+{
+    MouseGetPos, MouseX, MouseY
+    MouseMove, Stats_menus["Eggs"], Stats_menus["y"]
+    ClickMenu("Eggs")
+    MouseMove, Stats_menus["Eggs"], Stats_menus["y"]+100
+    Loop, %up_scrolls_before_searching%
+    {
+        Click, WheelUp
+        Sleep, 50
+    }
+    total_shown_items := Floor(((A_ScreenHeight - 236) / 95))
+    remaining_items_to_scroll_through := 100 - total_shown_items
+    scrolls_per_imagesearch := Floor(total_shown_items/5*3)
+    While, remaining_items_to_scroll_through > 0
+    {
+        Sleep, 250
+        ImageSearch, FoundX, FoundY, 0, 0, 500, A_ScreenHeight, *90 %A_ScriptDir%\images\items\%item_name%.png
+        If (ErrorLevel == 0)
+        {
+            MouseClickDrag, Left, FoundX-50, FoundY+40, A_ScreenWidth//2, A_ScreenHeight//2
+            Break
+        }
+        remaining_items_to_scroll_through -= 5/3*scrolls_per_imagesearch
+        Loop, %scrolls_per_imagesearch%
+        {
+            Click, WheelDown
+            Sleep, 50
+        }
+    }
+    ClickMenu("Eggs")
+    MouseMove, MouseX, MouseY
+}
+
+; Does a bug run only if enemies needed for the current polar bear quest are alive, repeating until no more bug runs are required
+PolarRun()
+{
+    Menu, Tray, Icon, %A_ScriptDir%\icons\polar.ico
+    ClickMenu("Quests")
+    Loop, 10
+    {
+        Sleep, 200
+        ImageSearch, FoundX, FoundY, 0, 0, A_ScreenWidth//3, A_ScreenHeight, *90 %A_ScriptDir%\images\quests\polar\complete.png
+        If (ErrorLevel == 0)
+        {
+            ClickMenu("Quests")
+            BugRun()
+            Return PolarRun()
+        }
+    }
+
+    ; polar_quests := {aromatic_pie: 20, beetle_brew: 5, candied_beetles: 5, complete: 1, exotic_salad: 1, extreme_stir_fry: 30, high_protein_bug_bar: 20, ladybug_poppers: 5, mantis_meatballs: 20, prickly_pears: 1, pumpkin_pie: 20, scorpion_salad: 20, spiced_kebab: 60, spider_pot_pie: 30, spooky_stew: 30, strawberry_skewers: 20, teriyaki_jerky: 60, thick_smoothie: 1, trail_mix: 1}
+    polar_quests := {aromatic_pie: 30, beetle_brew: 5, candied_beetles: 5, complete: 1, exotic_salad: 1, extreme_stir_fry: 30, high_protein_bug_bar: 20, ladybug_poppers: 5, mantis_meatballs: 999, prickly_pears: 1, pumpkin_pie: 60, scorpion_salad: 20, spiced_kebab: 60, spider_pot_pie: 30, spooky_stew: 30, strawberry_skewers: 20, teriyaki_jerky: 60, thick_smoothie: 1, trail_mix: 1}
+    For polar_quest_name, polar_quest_cooldown in polar_quests
+    {
+        ImageSearch, FoundX, FoundY, 0, 0, A_ScreenWidth//3, A_ScreenHeight, *90 %A_ScriptDir%\images\quests\polar\%polar_quest_name%.png
+        If ( (ErrorLevel == 0) && (MinutesSince(Cooldowns_bugrun) > polar_quest_cooldown) )
+        {
+            ClickMenu("Quests")
+            BugRun()
+            Return PolarRun()
+        }
+    }
+
+    ClickMenu("Quests")
+    Return False
 }

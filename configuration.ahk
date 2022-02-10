@@ -9,6 +9,7 @@ global Stats_VIP_to_reconnect_to := "https://www.roblox.com/games/1537690962?pri
 global Stats_seconds_to_wait_on_reconnect := 120
 global Stats_movespeed := 28
 global Stats_movespeed_factor := 28 / movespeed
+global Stats_menus := {Eggs: 0, Quests: 0, Bees: 0, Badges: 0, System: 0, Shop: 0, y: 0}
 
 global Hotkeys_extracts := 2
 global Hotkeys_enzymes := 3
@@ -86,6 +87,7 @@ ConfigCreate()
     VIP_to_reconnect_to=%Stats_VIP_to_reconnect_to%
     seconds_to_wait_on_reconnect=%Stats_seconds_to_wait_on_reconnect%
     movespeed=%Stats_movespeed%
+    menus=0,0,0,0,0,0,0
 
     ; These do not get pressed & don't need to be changed unless you code them in somewhere
     [Hotkeys]
@@ -117,7 +119,7 @@ ConfigCreate()
     [Cooldowns]
 
     [ConfigVersion]
-    current=1
+    current=2
     ), config.ini
     UpdateIniFromGlobals()
     MsgBox, A new config.ini file has been created, make sure to edit it before running anything!
@@ -177,6 +179,34 @@ UpdateGlobalsFromIni()
     {
         ini_key := SubStr(global_variable_name, 7)
         IniRead, %global_variable_name%, config.ini, Stats, %ini_key%
+    }
+    IniRead, ini_menu_positions, config.ini, Stats, menus
+    menu_positions := StrSplit(ini_menu_positions, ",")
+    Stats_menus["Eggs"] := menu_positions[1]
+    Stats_menus["Quests"] := menu_positions[2]
+    Stats_menus["Bees"] := menu_positions[3]
+    Stats_menus["Badges"] := menu_positions[4]
+    Stats_menus["System"] := menu_positions[5]
+    Stats_menus["Shop"] := menu_positions[6]
+    Stats_menus["y"] := menu_positions[7]
+    For menu_names, value in Stats_menus
+    {
+        If (value == 0)
+        {
+            MsgBox, % "Location of menus not found, move the mouse over the middle of the Eggs menu icon (the white egg at the top left) and wait 5 seconds for the next message."
+            Sleep, 5000
+            MouseGetPos, MouseX, MouseY
+            Stats_menus["Eggs"] := MouseX
+            Stats_menus["Quests"] := MouseX + 50
+            Stats_menus["Bees"] := MouseX + 105
+            Stats_menus["Badges"] := MouseX + 160
+            Stats_menus["System"] := MouseX + 220
+            Stats_menus["Shop"] := MouseX + 275
+            Stats_menus["y"] := MouseY
+            IniWrite, % Stats_menus["Eggs"] . "," . Stats_menus["Quests"] . "," . Stats_menus["Bees"] . "," . Stats_menus["Badges"] . "," . Stats_menus["System"] . "," . Stats_menus["Shop"] . "," . Stats_menus["y"], config.ini, Stats, menus
+            MsgBox, % "Locations saved, you shouldn't need to do this again."
+            Break
+        }
     }
 
     ; reading all the hotkeys in from the config.ini
