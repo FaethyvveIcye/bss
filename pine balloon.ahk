@@ -21,6 +21,9 @@ Loop
     Menu, Tray, Icon, %A_ScriptDir%\icons\handsome.ico
     ReconnectIfDisconnected()
     
+    If (MinutesSince(Cooldowns_balloon) >= 10)
+        EmptyHiveBalloon()
+
     WealthClock()
     AntPass()
     
@@ -31,10 +34,11 @@ Loop
     HoneydayCandles()
 
     ManagePlanters()
+    
+    PolarRun()
 
     WindShrine()
     BlueFieldBooster()
-    PineTreeForestTidePopper(150)
+    PineTreeForestTidePopper(110, True)
     ResetCharacter()
-    EmptyHiveBalloon()
 }
