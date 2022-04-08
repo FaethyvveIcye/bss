@@ -14,7 +14,7 @@ $^F11::		; CTRL+F11
 }
 
 ; "Play" Hotkeys
-;; Place cursor on the level of the bee and have the "user another royal jelly" menu open already
+;; Place cursor on the level of the bee and have the "use another royal jelly" menu open already
 $^p::		; CTRL+P
 $^F4::		; CTRL+F4
 {
