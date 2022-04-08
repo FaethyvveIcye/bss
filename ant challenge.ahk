@@ -18,7 +18,7 @@ $^p::		; CTRL+P
 $^F4::		; CTRL+F4
 Loop, 10
 {
-	Menu, Tray, Icon, %A_ScriptDir%\icons\handsome.ico
+	Menu, Tray, Icon, %A_ScriptDir%\icons\status\in-progress.ico
     ResetCharacter()
     AntChallenge()
 }

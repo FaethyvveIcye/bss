@@ -20,7 +20,11 @@ Our attempt at providing a powerful & easily extensible / editable function list
 5. Run an included example such as `sunf +bca.ahk` or `pine balloon.ahk` or any user-created file, default hotkeys are CTRL+Q to stop, and CTRL+P to play.
 
 ## Troubleshooting
-- Make sure your screen resolution is at least 800x600 and Windows Display Scaling is set to 100% (default), otherwise you may have to recapture or resize the pictures inside the `errors` and `images` folders
+- Make sure your screen resolution is at least 800x600.
+- Make sure Windows Display Scaling is set to 100% (default).
+- If you have a dedicated GPU, make sure you don't have any settings enabled which change image fidelity (such as AI-powered resolution upscaling, system-wide anti-aliasing, etc.) - note that these are usually off by default.
+- Any of the three above issues can cause repeated reconnections due to the functions not properly detecting if you're connected or in-game, and you may have to recapture or resize the pictures inside the `errors` and `images` folders.
+- If your wind shrine donations aren't functioning properly, you may need to recapture `wind_shrine_next_item.png` due to the way roblox draws this character differently for every resolution.
 - Make sure you have your sprinkler in the first slot, and have edited `config.ini`
 - You can try running the `reset config.ahk` file and re-editing the fresh `config.ini` if these functions worked for you in the past but stopped working.
 

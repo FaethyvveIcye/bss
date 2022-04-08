@@ -9,27 +9,27 @@ global Stats_VIP_to_reconnect_to := "https://www.roblox.com/games/1537690962?pri
 global Stats_seconds_to_wait_on_reconnect := 120
 global Stats_movespeed := 28
 global Stats_movespeed_factor := 28 / movespeed
-global Stats_menus := {Eggs: 0, Quests: 0, Bees: 0, Badges: 0, System: 0, Shop: 0, y: 0}
+global Stats_menus := {Eggs: 40, Quests: 90, Bees: 145, Badges: 200, System: 260, Shop: 315, y: 140}
 
-global Hotkeys_extracts := 2
-global Hotkeys_enzymes := 3
 global Hotkeys_planter1 := 4
 global Hotkeys_planter2 := 5
 global Hotkeys_planter3 := 6
-global Hotkeys_whirligig := 7
 
 global Planters_planter1 := "blueclay"
 global Planters_planter1_fields := ["PineTreeForest"]
 global Planters_planter1_reuse_time := [360]
 global Planters_planter1_current_field := "nowhere"
+global Planters_planter1_glitter := False
 global Planters_planter2 := "redclay"
 global Planters_planter2_fields := ["PumpkinPatch","RoseField"]
 global Planters_planter2_reuse_time := [360,360]
 global Planters_planter2_current_field := "nowhere"
+global Planters_planter2_glitter := False
 global Planters_planter3 := "tacky"
 global Planters_planter3_fields := ["MushroomField","SunflowerField"]
 global Planters_planter3_reuse_time := [360,360]
 global Planters_planter3_current_field := "nowhere"
+global Planters_planter3_glitter := False
 
 global Cooldowns_bugrun := 20211106000000
 global Cooldowns_mondo := 20211106000000
@@ -38,6 +38,10 @@ global Cooldowns_whirligig := 20211106000000
 global Cooldowns_planter1 := 20211106000000
 global Cooldowns_planter2 := 20211106000000
 global Cooldowns_planter3 := 20211106000000
+global Cooldowns_extract := 20211106000000
+global Cooldowns_glitter := 20211106000000
+global Cooldowns_oil := 20211106000000
+global Cooldowns_enzymes := 20211106000000
 global Cooldowns_wealthclock := 20211106000000
 global Cooldowns_antpass := 20211106000000
 global Cooldowns_blue_field_booster := 20211106000000
@@ -87,31 +91,32 @@ ConfigCreate()
     VIP_to_reconnect_to=%Stats_VIP_to_reconnect_to%
     seconds_to_wait_on_reconnect=%Stats_seconds_to_wait_on_reconnect%
     movespeed=%Stats_movespeed%
-    menus=0,0,0,0,0,0,0
+    menus=40,90,145,200,260,315,140
 
     ; These do not get pressed & don't need to be changed unless you code them in somewhere
     [Hotkeys]
-    extracts=2
-    enzymes=3
     planter1=4
     planter2=5
     planter3=6
-    whirligig=7
 
     ; Reuse time is in minutes and a time value is needed for each field
     ; Make sure you are following the proper naming convention
     ; Valid fields are their proper names
     ; Valid planters are: paper, ticket, festive, plastic, candy, redclay, blueclay, tacky, pesticide, petal, plenty
+    ; glitter=1 to use glitter (speeds up growth by 25percent), glitter=0 to not use glitter
     [Planters]
     planter1=blueclay
     planter1_fields=PineTreeForest
     planter1_reuse_time=360
+    planter1_glitter=0
     planter2=redclay
     planter2_fields=PumpkinPatch,RoseField
     planter2_reuse_time=360,360
+    planter2_glitter=0
     planter3=tacky
     planter3_fields=MushroomField,SunflowerField
     planter3_reuse_time=360,360
+    planter3_glitter=1
 
 
 
@@ -119,7 +124,7 @@ ConfigCreate()
     [Cooldowns]
 
     [ConfigVersion]
-    current=2
+    current=4
     ), config.ini
     UpdateIniFromGlobals()
     MsgBox, A new config.ini file has been created, make sure to edit it before running anything!
@@ -159,15 +164,15 @@ UpdateIniFromGlobals()
         IniWrite, % %global_variable_name%, config.ini, Planters, %ini_key%
     }
 
-
     ; saving cooldowns persistently
-    global_cooldown_vars_to_write := ["Cooldowns_bugrun", "Cooldowns_mondo", "Cooldowns_balloon", "Cooldowns_whirligig", "Cooldowns_planter1", "Cooldowns_planter2", "Cooldowns_planter3", "Cooldowns_wealthclock", "Cooldowns_antpass", "Cooldowns_blue_field_booster", "Cooldowns_red_field_booster", "Cooldowns_field_booster", "Cooldowns_honey_dispenser", "Cooldowns_treat_dispenser", "Cooldowns_star_hall_royal_jelly_dispenser", "Cooldowns_blueberry_dispenser", "Cooldowns_strawberry_dispenser", "Cooldowns_coconut_dispenser", "Cooldowns_glue_dispenser", "Cooldowns_honeystorm", "Cooldowns_special_sprout_summoner", "Cooldowns_mythic_meteor_shower", "Cooldowns_wind_shrine", "Cooldowns_memory_match", "Cooldowns_mega_memory_match", "Cooldowns_night_memory_match", "Cooldowns_extreme_memory_match", "Cooldowns_honey_wreath", "Cooldowns_gingerbread_house", "Cooldowns_stockings", "Cooldowns_snowbear_summoner", "Cooldowns_beesmas_feast", "Cooldowns_samovar", "Cooldowns_lid_art", "Cooldowns_winter_memory_match", "Cooldowns_honeyday_candles", "Cooldowns_snow_machine", "Cooldowns_gummy_beacon"]
+    global_cooldown_vars_to_write := ["Cooldowns_bugrun", "Cooldowns_mondo", "Cooldowns_balloon", "Cooldowns_whirligig", "Cooldowns_planter1", "Cooldowns_planter2", "Cooldowns_planter3", "Cooldowns_extract", "Cooldowns_glitter", "Cooldowns_oil", "Cooldowns_enzymes", "Cooldowns_wealthclock", "Cooldowns_antpass", "Cooldowns_blue_field_booster", "Cooldowns_red_field_booster", "Cooldowns_field_booster", "Cooldowns_honey_dispenser", "Cooldowns_treat_dispenser", "Cooldowns_star_hall_royal_jelly_dispenser", "Cooldowns_blueberry_dispenser", "Cooldowns_strawberry_dispenser", "Cooldowns_coconut_dispenser", "Cooldowns_glue_dispenser", "Cooldowns_honeystorm", "Cooldowns_special_sprout_summoner", "Cooldowns_mythic_meteor_shower", "Cooldowns_wind_shrine", "Cooldowns_memory_match", "Cooldowns_mega_memory_match", "Cooldowns_night_memory_match", "Cooldowns_extreme_memory_match", "Cooldowns_honey_wreath", "Cooldowns_gingerbread_house", "Cooldowns_stockings", "Cooldowns_snowbear_summoner", "Cooldowns_beesmas_feast", "Cooldowns_samovar", "Cooldowns_lid_art", "Cooldowns_winter_memory_match", "Cooldowns_honeyday_candles", "Cooldowns_snow_machine", "Cooldowns_gummy_beacon"]
     For each, global_variable_name in global_cooldown_vars_to_write
     {
         ; removes "Cooldowns_" from the start of the global variable and stores the result as the key name in the .ini file
         ini_key := SubStr(global_variable_name, 11)
         IniWrite, % %global_variable_name%, config.ini, Cooldowns, %ini_key%
     }
+    IniWrite, % A_NowUTC, config.ini, Cooldowns, last_updated
 }
 
 ; Retrieves the settings from config.ini for use with AHK
@@ -193,7 +198,7 @@ UpdateGlobalsFromIni()
     {
         If (value == 0)
         {
-            MsgBox, % "Location of menus not found, move the mouse over the middle of the Eggs menu icon (the white egg at the top left) and wait 5 seconds for the next message."
+            MsgBox, % "Location of menus not found, click the middle of the Eggs menu icon (the white egg at the top left) and wait 5 seconds for the next message."
             Sleep, 5000
             MouseGetPos, MouseX, MouseY
             Stats_menus["Eggs"] := MouseX
@@ -210,7 +215,7 @@ UpdateGlobalsFromIni()
     }
 
     ; reading all the hotkeys in from the config.ini
-    global_hotkey_vars_to_read := ["Hotkeys_extracts", "Hotkeys_enzymes", "Hotkeys_planter1", "Hotkeys_planter2", "Hotkeys_planter3", "Hotkeys_whirligig"]
+    global_hotkey_vars_to_read := ["Hotkeys_planter1", "Hotkeys_planter2", "Hotkeys_planter3"]
     For each, global_variable_name in global_hotkey_vars_to_read
     {
         ini_key := SubStr(global_variable_name, 9)
@@ -218,7 +223,7 @@ UpdateGlobalsFromIni()
     }
 
     ; reading all the planter information in from the config.ini
-    global_planter_vars_to_read := ["Planters_planter1", "Planters_planter2", "Planters_planter3", "Planters_planter1_current_field", "Planters_planter2_current_field", "Planters_planter3_current_field"]
+    global_planter_vars_to_read := ["Planters_planter1", "Planters_planter2", "Planters_planter3", "Planters_planter1_current_field", "Planters_planter2_current_field", "Planters_planter3_current_field", "Planters_planter1_glitter", "Planters_planter2_glitter", "Planters_planter3_glitter"]
     For each, global_variable_name in global_planter_vars_to_read
     {
         ini_key := SubStr(global_variable_name, 10)
@@ -234,13 +239,14 @@ UpdateGlobalsFromIni()
     }
 
     ; reading all the cooldowns in from the config.ini
-    global_cooldown_vars_to_read := ["Cooldowns_bugrun", "Cooldowns_mondo", "Cooldowns_balloon", "Cooldowns_whirligig", "Cooldowns_planter1", "Cooldowns_planter2", "Cooldowns_planter3", "Cooldowns_wealthclock", "Cooldowns_antpass", "Cooldowns_blue_field_booster", "Cooldowns_red_field_booster", "Cooldowns_field_booster", "Cooldowns_honey_dispenser", "Cooldowns_treat_dispenser", "Cooldowns_star_hall_royal_jelly_dispenser", "Cooldowns_blueberry_dispenser", "Cooldowns_strawberry_dispenser", "Cooldowns_coconut_dispenser", "Cooldowns_glue_dispenser", "Cooldowns_honeystorm", "Cooldowns_special_sprout_summoner", "Cooldowns_mythic_meteor_shower", "Cooldowns_wind_shrine", "Cooldowns_memory_match", "Cooldowns_mega_memory_match", "Cooldowns_night_memory_match", "Cooldowns_extreme_memory_match", "Cooldowns_honey_wreath", "Cooldowns_gingerbread_house", "Cooldowns_stockings", "Cooldowns_snowbear_summoner", "Cooldowns_beesmas_feast", "Cooldowns_samovar", "Cooldowns_lid_art", "Cooldowns_winter_memory_match", "Cooldowns_honeyday_candles", "Cooldowns_snow_machine", "Cooldowns_gummy_beacon"]
+    global_cooldown_vars_to_read := ["Cooldowns_bugrun", "Cooldowns_mondo", "Cooldowns_balloon", "Cooldowns_whirligig", "Cooldowns_planter1", "Cooldowns_planter2", "Cooldowns_planter3", "Cooldowns_extract", "Cooldowns_glitter", "Cooldowns_oil", "Cooldowns_enzymes", "Cooldowns_wealthclock", "Cooldowns_antpass", "Cooldowns_blue_field_booster", "Cooldowns_red_field_booster", "Cooldowns_field_booster", "Cooldowns_honey_dispenser", "Cooldowns_treat_dispenser", "Cooldowns_star_hall_royal_jelly_dispenser", "Cooldowns_blueberry_dispenser", "Cooldowns_strawberry_dispenser", "Cooldowns_coconut_dispenser", "Cooldowns_glue_dispenser", "Cooldowns_honeystorm", "Cooldowns_special_sprout_summoner", "Cooldowns_mythic_meteor_shower", "Cooldowns_wind_shrine", "Cooldowns_memory_match", "Cooldowns_mega_memory_match", "Cooldowns_night_memory_match", "Cooldowns_extreme_memory_match", "Cooldowns_honey_wreath", "Cooldowns_gingerbread_house", "Cooldowns_stockings", "Cooldowns_snowbear_summoner", "Cooldowns_beesmas_feast", "Cooldowns_samovar", "Cooldowns_lid_art", "Cooldowns_winter_memory_match", "Cooldowns_honeyday_candles", "Cooldowns_snow_machine", "Cooldowns_gummy_beacon"]
     For each, global_variable_name in global_cooldown_vars_to_read
     {
         ini_key := SubStr(global_variable_name, 11)
         IniRead, %global_variable_name%, config.ini, Cooldowns, %ini_key%
     }
     Stats_movespeed_factor := 28 / Stats_movespeed
+    IniWrite, % A_NowUTC, config.ini, Cooldowns, last_updated
 }
 
 ; Returns the config.ini version from the bottom of the file

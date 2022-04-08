@@ -17,7 +17,7 @@ $^F11::		; CTRL+F11
 $^p::		; CTRL+P
 $^F4::		; CTRL+F4
 {
-	Menu, Tray, Icon, %A_ScriptDir%\icons\handsome.ico
+	Menu, Tray, Icon, %A_ScriptDir%\icons\status\in-progress.ico
 	GatherFieldPollen(False, 300, 100, 99999, 3)
-	Menu, Tray, Icon, %A_ScriptDir%\icons\basic.ico
+	Menu, Tray, Icon, %A_ScriptDir%\icons\status\success.ico
 }

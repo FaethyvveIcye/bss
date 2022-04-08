@@ -18,7 +18,7 @@ $^p::         ; CTRL+P
 $^F4::        ; CTRL+F4
 Loop
 {
-    Menu, Tray, Icon, %A_ScriptDir%\icons\handsome.ico
+    Menu, Tray, Icon, %A_ScriptDir%\icons\status\in-progress.ico
     ReconnectIfDisconnected()
 
     ResetCharacter()

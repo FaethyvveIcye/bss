@@ -1,6 +1,6 @@
 ;; Made by Lessy / Saber
 #Include configuration.ahk
-If (GetConfigVersion() != 2)
+If (GetConfigVersion() != 4)
 {
     MsgBox, Your config.ini file is out of date, please press "OK" then run "reset config.ahk"
     ExitApp
@@ -31,7 +31,7 @@ EPress(amount:=1)
 ReleaseHeldKeysAndMouse()
 {
     Click, Up
-    For each, key in ["w","a","s","d", "space"]
+    For each, key in ["w","a","s","d","e", "space"]
         Send, {%key% up}
 }
 
@@ -53,53 +53,105 @@ MinutesSince(previous_time)
     Return time_difference
 }
 
-; Harvests the specified planter from the field it's currently in, returning True if the planter is ready to be re-placed, and False otherwise
-HarvestPlanter(planter_number)
+; Checks to see if the "machine" (anything with an "E" dialogue) is ready while standing at it, returning True if you can activate it and False otherwise
+IsMachineReady()
 {
+    ImageSearch,,, 0, 0, A_ScreenWidth//2, A_ScreenHeight//3, *90 %A_ScriptDir%\images\cooldown_e.png
+    Return (ErrorLevel == 0)
+}
+
+; Harvests the specified planter from the field it's currently in, returning True if the planter is ready to be re-placed, and False otherwise
+HarvestPlanter(planter_number, harvest_unfinished_planter:=true)
+{
+    current_planter := Planters_planter%planter_number%
+    Menu, Tray, Icon, %A_ScriptDir%\icons\planter_%current_planter%.ico
+    
+    ; if glitter is on cooldown and needed, skipping harvesting
+    If ((MinutesSince(Cooldowns_glitter) < 15) && Planters_planter%planter_number%_glitter)
+        Return False
+        
     For each, field in Planters_planter%planter_number%_fields
     {
         If (field == Planters_planter%planter_number%_current_field)
         {
-            ; cooldown isn't up yet, skip harvesting
+            ; cooldown isn't up yet, skipping harvesting
             If (MinutesSince(Cooldowns_planter%planter_number%) < Planters_planter%planter_number%_reuse_time[each])
                 Return False
 
-            current_planter := Planters_planter%planter_number%
-            Menu, Tray, Icon, %A_ScriptDir%\icons\planter_%current_planter%.ico
             ResetCharacter(3)
             %field%(0)  ; dynamically calling the field macro with 0 field loops to navigate to the field
+            Sleep, 1000
+            ; TODO: Re-write planters as objects / give them indices to allow unlimited chains and better redundancy
+            ; This check below would be good in the case we didn't get to the field properly, but we can't technically do this due to the way we handle planters in memory on the chance re-planting is interrupted
+            If !IsMachineReady()
+                {
+                    find_planter_movement := 100
+                    Loop, 5
+                    {
+                        KeyPress("w", find_planter_movement)
+                        Sleep, 500
+                        If IsMachineReady()
+                            Break
+                        find_planter_movement += 100
+                        KeyPress("d", find_planter_movement)
+                        Sleep, 500
+                        If IsMachineReady()
+                            Break
+                        find_planter_movement += 100
+                        KeyPress("s", find_planter_movement)
+                        Sleep, 500
+                        If IsMachineReady()
+                            Break
+                        find_planter_movement += 100
+                        KeyPress("a", find_planter_movement)
+                        Sleep, 500
+                        If IsMachineReady()
+                            Break
+                        find_planter_movement += 100
+                    }
+                    If (find_planter_movement == 2100)
+                        Return False
+                }
             EPress(5)
             Sleep, 1000
             ImageSearch, FoundX, FoundY, 0, 0, A_ScreenWidth, A_ScreenHeight, *90 %A_ScriptDir%\images\planter_still_growing.png
             If (ErrorLevel == 0)
             {
                 MouseGetPos, MouseX, MouseY
+                If harvest_unfinished_planter
+                    FoundX -= 200
                 MouseMove, FoundX, FoundY
                 Sleep, 1000
                 Click, Left
                 MouseMove, MouseX, MouseY
+                If harvest_unfinished_planter
+                    Break
                 Cooldowns_planter%planter_number% := A_NowUTC
                 EnvSub, Cooldowns_planter%planter_number%, Planters_planter%planter_number%_reuse_time[each], Minutes
                 EnvAdd, Cooldowns_planter%planter_number%, 15, Minutes
                 UpdateIniFromGlobals()
                 Return False
-            } Else {
-                to_return := True
-                If (Planters_planter%planter_number%_fields.Length() == 1)
-                {
-                    KeyPress(Hotkeys_planter%planter_number%)
-                    Planters_planter%planter_number%_current_field := field
-                    Cooldowns_planter%planter_number% := A_NowUTC
-                    UpdateIniFromGlobals()
-                    to_return := False
-                }
-                ; Planters_planter#_current_field should continue to store the last planter for referencing where to place it next until it is placed
-                KeyPress("a", 600)
-                KeyPress("s", 100)
-                Sleep, 100
-                CircleForLoot(11)
-                Return to_return
             }
+            needs_to_be_placed_again := True
+            If (Planters_planter%planter_number%_fields.Length() == 1)
+            {
+                KeyPress(Hotkeys_planter%planter_number%)
+                Planters_planter%planter_number%_current_field := field
+                Cooldowns_planter%planter_number% := A_NowUTC
+                UpdateIniFromGlobals()
+                needs_to_be_placed_again := False
+            }
+            ; Planters_planter#_current_field should continue to store the last planter for referencing where to place it next until it is placed
+            KeyPress("a", 600)
+            KeyPress("s", 200)
+            Sleep, 1000
+            If (Planters_planter%planter_number% == "pesticide") || (Planters_planter%planter_number% == "petal") || (Planters_planter%planter_number% == "plenty")
+            {
+                UseItemFromInventory("micro-converter")
+                Sleep, 1000
+            }
+            CircleForLoot(14)
+            Return needs_to_be_placed_again
         }
     }
     ; planter is in an unregistered field or it's nowhere, assuming inventory
@@ -128,22 +180,27 @@ PlacePlanter(planter_number)
     KeyPress(Hotkeys_planter%planter_number%)
     Planters_planter%planter_number%_current_field := field_to_place_the_planter_in
     Cooldowns_planter%planter_number% := A_NowUTC
+    If (Planters_planter%planter_number%_glitter)
+    {
+        If UseItemFromInventory("glitter")
+            Cooldowns_glitter := A_NowUTC
+    }
     UpdateIniFromGlobals()
     Return True
 }
 
 ; Harvests any ready planter, replanting them in the appropriate fields
-ManagePlanters()
+ManagePlanters(harvest_unfinished_planters:=True)
 {
     ReconnectIfDisconnected()
 
-    If (HarvestPlanter(1))
+    If (HarvestPlanter(1, harvest_unfinished_planters))
         PlacePlanter(1)
 
-    If (HarvestPlanter(2))
+    If (HarvestPlanter(2, harvest_unfinished_planters))
         PlacePlanter(2)
 
-    If (HarvestPlanter(3))
+    If (HarvestPlanter(3, harvest_unfinished_planters))
         PlacePlanter(3)
 }
 
@@ -154,7 +211,7 @@ IsConnected()
     If WinActive("ahk_exe chrome.exe") && WinExist("ahk_exe RobloxPlayerBeta.exe")
         WinActivate, ahk_exe RobloxPlayerBeta.exe
 
-    ImageSearch, FoundX, FoundY, 0, A_ScreenHeight//2, A_ScreenWidth//2, A_ScreenHeight, *40 %A_ScriptDir%\images\reconnect_sprinkler.png
+    ImageSearch,,, 0, A_ScreenHeight//2, A_ScreenWidth//2, A_ScreenHeight, *40 %A_ScriptDir%\images\reconnect_sprinkler.png
     Return (ErrorLevel == 0)
 }
 
@@ -163,14 +220,16 @@ Reconnect()
 {
     Menu, Tray, Icon, %A_ScriptDir%\icons\connection_problems.ico
 
+    If WinExist("ahk_exe RobloxPlayerBeta.exe")
+        PostMessage, 0x0112, 0xF060,,, ahk_exe RobloxPlayerBeta.exe
+
     Run, %Stats_VIP_to_reconnect_to%
 
     Cooldowns_wealthclock := A_NowUTC
     FormatTime, CurrentMinute, A_NowUTC, m
     If (CurrentMinute < 16)
-    {
         Cooldowns_mondo := A_NowUTC
-    }
+
     EnvAdd, Cooldowns_planter1, Stats_seconds_to_wait_on_reconnect, Seconds
     EnvAdd, Cooldowns_planter2, Stats_seconds_to_wait_on_reconnect, Seconds
     EnvAdd, Cooldowns_planter3, Stats_seconds_to_wait_on_reconnect, Seconds
@@ -182,20 +241,22 @@ Reconnect()
         Return Reconnect()
 
     ; Rotating camera if we spawned in backwards, because apparently that's a thing now
-    ImageSearch, FoundX, FoundY, 0, A_ScreenHeight//2, A_ScreenWidth, A_ScreenHeight, *90 %A_ScriptDir%\images\reconnect_hiveblock.png
-    If (ErrorLevel != 0) {
+    ImageSearch,,, 0, A_ScreenHeight//2, A_ScreenWidth, A_ScreenHeight, *90 %A_ScriptDir%\images\reconnect_hiveblock.png
+    If (ErrorLevel != 0)
+    {
         RotateCamera(4)
         Sleep, 1000
-        ImageSearch, FoundX, FoundY, 0, A_ScreenHeight//2, A_ScreenWidth, A_ScreenHeight, *90 %A_ScriptDir%\images\reconnect_hiveblock.png
-        If (ErrorLevel != 0) {
+        ImageSearch,,, 0, A_ScreenHeight//2, A_ScreenWidth, A_ScreenHeight, *90 %A_ScriptDir%\images\reconnect_hiveblock.png
+        If (ErrorLevel != 0)
             Return Reconnect()
-        }
     }
 
     KeyPress("w", 5000)
     KeyPress("s", 800)
     (Stats_hive_slot < 3) ? KeyPress("d", (1200 * (3 - Stats_hive_slot))) : KeyPress("a", (1200 * (Stats_hive_slot - 3)))   ; reversed-camera MoveToSlot() from the middle spawn-in location
     Sleep, 1000
+    If !IsMachineReady()
+        Return Reconnect()
     EPress()
     MouseMove, A_ScreenWidth//2, A_ScreenHeight//2
     ResetCharacter()
@@ -213,7 +274,7 @@ ReconnectIfDisconnected()
 IsBagFull()
 {
     ; PixelColor is F70017, but PixelSearch is unreliable
-    ImageSearch, FoundX, FoundY, A_ScreenWidth//2, 0, A_ScreenWidth, A_ScreenHeight//4, *90 %A_ScriptDir%\images\bagfull.png
+    ImageSearch,,, A_ScreenWidth//2, 0, A_ScreenWidth, A_ScreenHeight//4, *90 %A_ScriptDir%\images\bagfull.png
     Return (ErrorLevel == 0)
 }
 
@@ -282,18 +343,28 @@ FaceHive(should_face_hive:=true)
 {
     Loop, 4
     {
-        Loop, 7
+        Loop, 2
         {
-            ; checks bottom-left quadrant of screen for sprinkler on hivecomb background
-            ; for a full-screen check, change co-ordinates to: 0, 0, A_ScreenWidth, A_ScreenHeight
-            ImageSearch, FoundX, FoundY, 0, A_ScreenHeight//2, A_ScreenWidth//2, A_ScreenHeight, *90 %A_ScriptDir%\images\hivecomb.png
+            ; sprinkler on hivecomb check
+            ImageSearch,,, 0, A_ScreenHeight//2, A_ScreenWidth//2, A_ScreenHeight, *90 %A_ScriptDir%\images\hivecomb.png
             If (ErrorLevel == 0)
             {
                 If(should_face_hive)
                     RotateCamera(4)
                 Return
             }
-            
+            ; gifted hiveslot check
+            KeyPress("o")
+            Sleep, 500
+            ImageSearch,,, 0, 0, A_ScreenWidth, A_ScreenHeight, %A_ScriptDir%\images\hivegift.png
+            KeyPress("i")
+            If (ErrorLevel == 0)
+            {
+                If(should_face_hive)
+                    RotateCamera(4)
+                Return
+            }
+            ; rotating the camera & checking again
             RotateCamera(4)
             Sleep, 1000
         }
@@ -318,6 +389,10 @@ MoveToAndFireRedCannon()
     KeyPress("s", 1000)
     Jump()
     KeyPress("a", 1500)
+    ; Not sure how Exit handles all situations
+    ; Sleep, 500
+    ; If !IsMachineReady()
+    ;     Exit
     EPress(5)
 }
 
@@ -328,7 +403,7 @@ IsStuck()
     {
         ; checks top-right quadrant of screen for honey cost of various shops interfaces
         ; for a full-screen check, change co-ordinates to: 0, 0, A_ScreenWidth, A_ScreenHeight
-        ImageSearch, FoundX, FoundY, A_ScreenWidth//2, 0, A_ScreenWidth, A_ScreenHeight//2, *90 %A_LoopFileFullPath%
+        ImageSearch,,, A_ScreenWidth//2, 0, A_ScreenWidth, A_ScreenHeight//2, *90 %A_LoopFileFullPath%
         If (ErrorLevel == 0)
             Return true
     }
@@ -356,11 +431,21 @@ UnStickIfStuck()
 EmptyHiveBalloon(reset_after_emptying:=false)
 {
     Menu, Tray, Icon, %A_ScriptDir%\icons\balloon.ico
-    If (MinutesSince(Cooldowns_whirligig) > 1)
-        FaceHive()
+    If (MinutesSince(Cooldowns_balloon) <= 2)
+        Return
 
-    ImageSearch, FoundX, FoundY, A_ScreenWidth//3, 0, A_ScreenWidth, A_ScreenHeight//3, *90 %A_ScriptDir%\images\can_make_honey_from_balloon.png
+    If (MinutesSince(Cooldowns_whirligig) > 1)
+    {
+        FaceHive()
+    } Else {
+        Sleep, 2000
+    }
+
+    ImageSearch,,, A_ScreenWidth//3, 0, A_ScreenWidth, A_ScreenHeight//3, *90 %A_ScriptDir%\images\can_make_honey_from_balloon.png
     If (ErrorLevel != 0)
+        Return
+
+    If !IsMachineReady()
         Return
 
     EPress()
@@ -369,30 +454,35 @@ EmptyHiveBalloon(reset_after_emptying:=false)
     Loop, 1200
     {
         Sleep, 500
-        ImageSearch, FoundX, FoundY, A_ScreenWidth//3, 0, A_ScreenWidth, A_ScreenHeight//3, *90 %A_ScriptDir%\images\making_honey_from_balloon.png
+        ImageSearch,,, A_ScreenWidth//3, 0, A_ScreenWidth, A_ScreenHeight//3, *90 %A_ScriptDir%\images\making_honey_from_balloon.png
         If (ErrorLevel != 0)
             Break
     }
 
     If (reset_after_emptying)
     {
-        Jump(200)
-        ResetCharacter(2)
+        ResetCharacter()
     }
+    Cooldowns_balloon := A_NowUTC
+    UpdateIniFromGlobals()
 }
 
-; Uses a Whirligig or resets if it's on cooldown
-WhirligigOrReset(camera_rotations:=0, from_egg_menu:=false)
+; Uses a Whirligig or resets if it's on cooldown, returns True if one is used and False otherwise
+WhirligigOrReset(camera_rotations:=0)
 {
     If (MinutesSince(Cooldowns_whirligig) > 5)
     {
-        from_egg_menu ? UseItemFromInventory("whirligig") : KeyPress(Hotkeys_whirligig)
-        Cooldowns_whirligig := A_NowUTC
-        UpdateIniFromGlobals()
-        RotateCamera(camera_rotations)
-        Sleep, 1000
+        If (UseItemFromInventory("whirligig"))
+        {
+            Cooldowns_whirligig := A_NowUTC
+            UpdateIniFromGlobals()
+            RotateCamera(camera_rotations)
+            Sleep, 1000
+            Return True
+        }
     } Else {
         ResetCharacter()
+        Return False
     }
 }
 
@@ -443,65 +533,12 @@ WealthClock()
     Jump(17000*Stats_movespeed_factor)
     Send, {w up}
     Sleep, 1500
+    If !IsMachineReady()
+        Return
     EPress(20)
     Cooldowns_wealthclock := A_NowUTC
     UpdateIniFromGlobals()
 }
-
-/* Non-Beesmas Pathing
-; Grabs wealth clock, then resets, skipping if on cooldown automatically
-WealthClock()
-{
-    If (MinutesSince(Cooldowns_wealthclock) < 60)
-        Return
-
-    Menu, Tray, Icon, %A_ScriptDir%\icons\clock.ico
-    FaceHive(false)
-    Sleep, 500
-    KeyPress("s", 100)
-    KeyPress("s", 700)
-    KeyPress("d", 100)
-    KeyPress("d", 10000)
-    KeyPress("w", 100)
-    KeyPress("w", 4000)
-    KeyPress("s", 100)
-    Sleep, 500
-    Jump(100)
-    KeyPress("w", 1000)
-    Send, {d down}
-    Sleep, 4000 * Stats_movespeed_factor
-    Jump()
-    Sleep, 2000 * Stats_movespeed_factor
-    Jump()
-    Sleep, 2000 * Stats_movespeed_factor
-    Send, {d up}
-    KeyPress("s", 2000)
-    KeyPress("d", 3000)
-    KeyPress("w", 500)
-    KeyPress("d", 600)
-    Sleep, 100
-    Send, {d down}
-    Sleep, 3000 * Stats_movespeed_factor
-    Jump()
-    Sleep, 1500 * Stats_movespeed_factor
-    Jump()
-    Sleep, 1000 * Stats_movespeed_factor
-    Send, {d up}
-    Sleep, 100
-    Send, {w down}
-    Sleep, 1100 * Stats_movespeed_factor
-    Jump()
-    Loop, 50
-    {
-        EPress()
-        Sleep, 50
-    }
-    Cooldowns_wealthclock := A_NowUTC
-    UpdateIniFromGlobals()
-    Send, {w up}
-    ResetCharacter()
-}
-*/
 
 ; Grabs ant pass, then resets, skipping if on cooldown automatically
 AntPass()
@@ -572,7 +609,7 @@ BugRun()
     KeyPress("s", 100)
     PlaceSprinklers()
     Sleep, 500
-    ImageSearch, SprinklerX, SprinklerY, A_ScreenWidth//2, A_ScreenHeight//4, A_ScreenWidth, A_ScreenHeight, *90 %A_ScriptDir%\errors\you_must_be_standing_in_a_field_to_build_a_Sprinkler.png
+    ImageSearch,,, A_ScreenWidth//2, A_ScreenHeight//4, A_ScreenWidth, A_ScreenHeight, *90 %A_ScriptDir%\errors\you_must_be_standing_in_a_field_to_build_a_Sprinkler.png
     If (ErrorLevel == 0)
         Return
     Loop, 4
@@ -626,28 +663,20 @@ BugRun()
     KeyPress("a", 1700)
     KeyPress("w", 6100)
     Menu, Tray, Icon, %A_ScriptDir%\icons\vicious.ico
-    KeyPress("d", 5000)
-    
-    ; Walking out of the cave monsters' cave if necessary
-    ImageSearch, FoundX, FoundY, 0, A_ScreenHeight//2, A_ScreenWidth//2, A_ScreenHeight, *5 %A_ScriptDir%\images\cavemonster_cave.png
-    If (ErrorLevel == 0)
+    KeyPress("d", 4500)
+    KeyPress("a", 200)
+    Send, {s down}{a down}
+    Sleep, 1200 * Stats_movespeed_factor
+    Send, {s up}{a up}
+    KeyPress("a", 1400)
+    Menu, Tray, Icon, %A_ScriptDir%\icons\cactus.ico
+    Loop, 5
     {
-        KeyPress("a", 4000)
-    } Else {
-        KeyPress("a", 200)
-        Send, {s down}{a down}
-        Sleep, 1200 * Stats_movespeed_factor
-        Send, {s up}{a up}
-        KeyPress("a", 1400)
-        Menu, Tray, Icon, %A_ScriptDir%\icons\cactus.ico
-        Loop, 5
-        {
-            Sleep, 500
-            KeyPress("w", 500)
-            KeyPress("d", 600)
-            KeyPress("s", 300)
-            KeyPress("a", 500)
-        }
+        Sleep, 500
+        KeyPress("w", 500)
+        KeyPress("d", 600)
+        KeyPress("s", 300)
+        KeyPress("a", 500)
     }
 
     Menu, Tray, Icon, %A_ScriptDir%\icons\pumpkin.ico
@@ -655,7 +684,7 @@ BugRun()
     KeyPress("s", 300)
     PlaceSprinklers()
     Sleep, 500
-    ImageSearch, SprinklerX, SprinklerY, A_ScreenWidth//2, A_ScreenHeight//4, A_ScreenWidth, A_ScreenHeight, *90 %A_ScriptDir%\errors\you_must_be_standing_in_a_field_to_build_a_Sprinkler.png
+    ImageSearch,,, A_ScreenWidth//2, A_ScreenHeight//4, A_ScreenWidth, A_ScreenHeight, *90 %A_ScriptDir%\errors\you_must_be_standing_in_a_field_to_build_a_Sprinkler.png
     If (ErrorLevel == 0)
         Return
     Loop, 4
@@ -718,9 +747,8 @@ BugRun()
     Jump()
     KeyPress("w", 200)
     Jump()
-    KeyPress("w", 8000)
+    KeyPress("w", 7000)
     RotateCamera(-3)
-    KeyPress("a", 1500)
     Menu, Tray, Icon, %A_ScriptDir%\icons\vicious.ico
     KeyPress("d", 1000)
     KeyPress("w", 2300)
@@ -746,7 +774,7 @@ BugRun()
     KeyPress("d", 300)
     PlaceSprinklers()
     Sleep, 500
-    ImageSearch, SprinklerX, SprinklerY, A_ScreenWidth//2, A_ScreenHeight//4, A_ScreenWidth, A_ScreenHeight, *90 %A_ScriptDir%\errors\you_must_be_standing_in_a_field_to_build_a_Sprinkler.png
+    ImageSearch,,, A_ScreenWidth//2, A_ScreenHeight//4, A_ScreenWidth, A_ScreenHeight, *90 %A_ScriptDir%\errors\you_must_be_standing_in_a_field_to_build_a_Sprinkler.png
     If (ErrorLevel == 0)
         Return
     Loop, 5
@@ -765,7 +793,7 @@ BugRun()
     KeyPress("a", 1000)
     PlaceSprinklers()
     Sleep, 500
-    ImageSearch, SprinklerX, SprinklerY, A_ScreenWidth//2, A_ScreenHeight//4, A_ScreenWidth, A_ScreenHeight, *90 %A_ScriptDir%\errors\you_must_be_standing_in_a_field_to_build_a_Sprinkler.png
+    ImageSearch,,, A_ScreenWidth//2, A_ScreenHeight//4, A_ScreenWidth, A_ScreenHeight, *90 %A_ScriptDir%\errors\you_must_be_standing_in_a_field_to_build_a_Sprinkler.png
     If (ErrorLevel == 0)
         Return
     Loop, 5
@@ -905,7 +933,7 @@ Mondo()
         }
         */
         Sleep, 5000
-        ImageSearch, FoundX, FoundY, 0, 0, A_ScreenWidth, 120, *40 %A_ScriptDir%\images\mondobuff.png
+        ImageSearch,,, 0, 0, A_ScreenWidth, 120, *40 %A_ScriptDir%\images\mondobuff.png
         If (ErrorLevel == 0)
         {
             ; loot
@@ -974,6 +1002,9 @@ AntChallenge()
     KeyPress("w", 2900)
     KeyPress("d", 200)
     RotateCamera(1)
+    Sleep, 500
+    If !IsMachineReady()
+        Return
     EPress(5)
     Sleep, 1000
     KeyPress("s", 1500)
@@ -1011,6 +1042,9 @@ BlueFieldBooster()
     KeyPress("s", 1500)
     KeyPress("a", 3200)
     KeyPress("w", 2200)
+    Sleep, 500
+    If !IsMachineReady()
+        Return
     EPress(5)
     Cooldowns_blue_field_booster := A_NowUTC
     UpdateIniFromGlobals()
@@ -1040,6 +1074,9 @@ RedFieldBooster()
     Jump()
     KeyPress("w", 2500)
     KeyPress("a", 1000)
+    Sleep, 500
+    If !IsMachineReady()
+        Return
     EPress(5)
     Cooldowns_red_field_booster := A_NowUTC
     UpdateIniFromGlobals()
@@ -1050,7 +1087,7 @@ RedFieldBooster()
 WindShrine(item_index:=0, item_amount:=1)
 {
     If (MinutesSince(Cooldowns_wind_shrine) < 60)
-        Return
+        Return False
 
     Menu, Tray, Icon, %A_ScriptDir%\icons\windy_bee.ico
     ResetCharacter(2)
@@ -1093,25 +1130,43 @@ WindShrine(item_index:=0, item_amount:=1)
     KeyPress("w", 600)
     Sleep, 1000
     ; Donation
+    If !IsMachineReady()
+        Return False
     EPress()
     MouseGetPos, MouseOriginalX, MouseOriginalY
     MouseMove, 100, 100
-    Sleep, 1000
+    Sleep, 2000
     FoundXDialogue := 100
     FoundYDialogue := 100
+    ImageSearch, FoundXDialogue, FoundYDialogue, 0, 0, A_ScreenWidth, A_ScreenHeight, *90 %A_ScriptDir%\images\wind_shrine_is_on_cooldown.png
+    If (ErrorLevel == 0)
+    {
+        Cooldowns_wind_shrine := A_NowUTC
+        UpdateIniFromGlobals()
+        MouseMove, FoundXDialogue, FoundYDialogue
+        Click, Left
+        Sleep, 500
+        Return False
+    }
     ImageSearch, FoundXDialogue, FoundYDialogue, 0, 0, A_ScreenWidth, A_ScreenHeight, *90 %A_ScriptDir%\images\wind_shrine_dialogue.png
     If (ErrorLevel != 0)
     {
         ImageSearch, FoundXDialogue, FoundYDialogue, 0, 0, A_ScreenWidth, A_ScreenHeight, *90 %A_ScriptDir%\images\wind_shrine_offering.png
         If (ErrorLevel != 0)
-            Return
+        {
+            Reconnect()
+            Return False
+        }
     }
     MouseMove, FoundXDialogue, FoundYDialogue
     Click, Left
     Sleep, 500
     ImageSearch, FoundX, FoundY, 0, 0, A_ScreenWidth, A_ScreenHeight, *90 %A_ScriptDir%\images\wind_shrine_next_item.png
     If (ErrorLevel != 0)
-        Return
+    {
+        Reconnect()
+        Return False
+    }
     MouseMove, FoundX, FoundY
     Loop, %item_index%
     {
@@ -1120,7 +1175,10 @@ WindShrine(item_index:=0, item_amount:=1)
     }
     ImageSearch, FoundX, FoundY, 0, 0, A_ScreenWidth, A_ScreenHeight, *90 %A_ScriptDir%\images\wind_shrine_increment.png
     If (ErrorLevel != 0)
-        Return
+    {
+        Reconnect()
+        Return False
+    }
     MouseMove, FoundX, FoundY
     Loop, (%item_amount% - 1)
     {
@@ -1129,7 +1187,10 @@ WindShrine(item_index:=0, item_amount:=1)
     }
     ImageSearch, FoundX, FoundY, 0, 0, A_ScreenWidth, A_ScreenHeight, *90 %A_ScriptDir%\images\wind_shrine_donate.png
     If (ErrorLevel != 0)
-        Return
+    {
+        Reconnect()
+        Return False
+    }
     MouseMove, FoundX, FoundY
     Click, Left
     Cooldowns_wind_shrine := A_NowUTC
@@ -1164,6 +1225,7 @@ WindShrine(item_index:=0, item_amount:=1)
         Sleep, 1000
         wind_shrine_collection_movement_amount -= 100
     }
+    Return True
 }
 
 ; Navigates to, checks inside, and collects the items from, Brown Bear's Stockings
@@ -1185,6 +1247,9 @@ Stockings()
     Jump()
     KeyPress("w", 5000)
     KeyPress("d", 500)
+    Sleep, 500
+    If !IsMachineReady()
+        Return
     EPress(5)
     Cooldowns_stockings := A_NowUTC
     UpdateIniFromGlobals()
@@ -1213,6 +1278,9 @@ BeesmasFeast()
     Sleep, 100
     Jump()
     KeyPress("w", 900)
+    Sleep, 500
+    If !IsMachineReady()
+        Return
     EPress(5)
     Cooldowns_beesmas_feast := A_NowUTC
     UpdateIniFromGlobals()
@@ -1247,6 +1315,9 @@ Samovar()
     Sleep, 100
     Jump()
     KeyPress("w", 950)
+    Sleep, 500
+    If !IsMachineReady()
+        Return
     EPress(5)
     Cooldowns_samovar := A_NowUTC
     UpdateIniFromGlobals()
@@ -1275,6 +1346,8 @@ LidArt()
     Jump()
     KeyPress("w", 300)
     Sleep, 1000
+    If !IsMachineReady()
+        Return
     EPress(5)
     Cooldowns_lid_art := A_NowUTC
     UpdateIniFromGlobals()
@@ -1297,7 +1370,7 @@ HoneydayCandles()
     KeyPress("s", 100)
     Sleep, 100
     Jump()
-    KeyPress("w", 1000)
+    KeyPress("w", 1200)
     RotateCamera(2)
     KeyPress("w", 2000)
     KeyPress("a", 1000)
@@ -1308,6 +1381,9 @@ HoneydayCandles()
     KeyPress("w", 4200)
     KeyPress("a", 3350)
     KeyPress("w", 2000)
+    Sleep, 500
+    If !IsMachineReady()
+        Return
     EPress(5)
     Cooldowns_honeyday_candles := A_NowUTC
     UpdateIniFromGlobals()
@@ -1316,17 +1392,86 @@ HoneydayCandles()
     CircleForLoot()
 }
 
+; Gathers field pollen, realigning with regards to the presence of a supreme saturator, credits to zez for the idea
+GatherFieldPollenPlus(stop_on_full_bag:=True, minutes_in_field:=5)
+{
+    PlaceSprinklers()
+    Sleep, 500
+    ImageSearch,,, A_ScreenWidth//2, A_ScreenHeight//4, A_ScreenWidth, A_ScreenHeight, *90 %A_ScriptDir%\errors\you_must_be_standing_in_a_field_to_build_a_Sprinkler.png
+    If (ErrorLevel == 0)
+        Return False
+
+    WinGetActiveStats, Title, Width, Height, X, Y
+    MiddleX := Round(Width//2)
+    MiddleY := Round(Height//2+50)
+    Click, Down
+    gathering_start_time := A_NowUTC
+    While, (MinutesSince(gathering_start_time) < minutes_in_field)
+    {
+        field_movement := 100
+        field_movement_extra_amount_per_line := 25
+        ; expanding outward movement
+        Loop, 3
+        {
+            KeyPress("w", field_movement+10)
+            field_movement += field_movement_extra_amount_per_line
+            KeyPress("d", field_movement)
+            field_movement += field_movement_extra_amount_per_line
+            KeyPress("s", field_movement)
+            field_movement += field_movement_extra_amount_per_line
+            KeyPress("a", field_movement)
+            field_movement += field_movement_extra_amount_per_line
+        }
+        ; inward movement
+        Loop, 3
+        {
+            KeyPress("w", field_movement)
+            field_movement -= field_movement_extra_amount_per_line
+            KeyPress("d", field_movement)
+            field_movement -= field_movement_extra_amount_per_line
+            KeyPress("s", field_movement)
+            field_movement -= field_movement_extra_amount_per_line
+            KeyPress("a", field_movement)
+            field_movement -= field_movement_extra_amount_per_line
+        }
+
+        ; bag check
+        If (stop_on_full_bag && IsBagFull()) then
+            Break
+        If (A_Index == field_squares) or !(IsConnected())
+            Break
+
+        ; field realignment
+        ImageSearch, SprinklerX, SprinklerY, 0, 0, Width, Height, *30 %A_ScriptDir%\images\supreme_saturator.png
+        If (ErrorLevel == 0)
+        {
+            SprinklerX := Round(SprinklerX)
+            SprinklerY := Round(SprinklerY)
+            If (SprinklerX > (MiddleX+50))
+                KeyPress("d", 150)
+            If (SprinklerX < (MiddleX-50))
+                KeyPress("a", 150)
+            If (SprinklerY > (MiddleY+50))
+                KeyPress("s", 150)
+            If (SprinklerY < (MiddleY-50))
+                KeyPress("w", 150)
+        }
+    }
+    Click, Up
+    Return True
+}
+
 ; Places sprinklers then snakes the field for pollen, optionally stopping if bag is full, realigning against the walls
-GatherFieldPollen(stop_on_full_bag:=True, vertical_length:=300, horizontal_length:=100, field_loops:=20, snakes:=4, front_wall:=False, left_wall:=False, right_wall:=False, back_wall:=False, realign_distance:=400, realign_frequency:=5)
+GatherFieldPollen(stop_on_full_bag:=True, vertical_length:=300, horizontal_length:=100, field_loops:=20, snakes:=4, front_wall:=False, left_wall:=False, right_wall:=False, back_wall:=False, realign_distance_sides:=400, realisn_distance_frontback:=400, realign_frequency:=5)
 {
     If (%field_loops% == 0)
-        Return
+        Return True
 
     PlaceSprinklers()
     Sleep, 500
-    ImageSearch, SprinklerX, SprinklerY, A_ScreenWidth//2, A_ScreenHeight//4, A_ScreenWidth, A_ScreenHeight, *90 %A_ScriptDir%\errors\you_must_be_standing_in_a_field_to_build_a_Sprinkler.png
+    ImageSearch,,, A_ScreenWidth//2, A_ScreenHeight//4, A_ScreenWidth, A_ScreenHeight, *90 %A_ScriptDir%\errors\you_must_be_standing_in_a_field_to_build_a_Sprinkler.png
     If (ErrorLevel == 0)
-        Return
+        Return False
 
     ; if there is a wall, we want to start close to it, then realign on it at the end of a few loops
     Click, Down
@@ -1361,21 +1506,22 @@ GatherFieldPollen(stop_on_full_bag:=True, vertical_length:=300, horizontal_lengt
                 If (A_Index == field_loops) or !(IsConnected())
                     break
                 ; into walls
-                front_wall ? KeyPress("w", realign_distance * realign_factor) : 
-                right_wall ? KeyPress("d", realign_distance * realign_factor) : 
-                back_wall ? KeyPress("s", realign_distance * realign_factor) : 
-                left_wall ? KeyPress("a", realign_distance * realign_factor) : 
+                front_wall ? KeyPress("w", realisn_distance_frontback * realign_factor) : 
+                right_wall ? KeyPress("d", realign_distance_sides * realign_factor) : 
+                back_wall ? KeyPress("s", realisn_distance_frontback * realign_factor) : 
+                left_wall ? KeyPress("a", realign_distance_sides * realign_factor) : 
                 ; back onto field
-                back_wall ? KeyPress("w", realign_distance) : 
-                right_wall ? KeyPress("a", realign_distance) : 
-                front_wall ? KeyPress("s", realign_distance) : 
-                left_wall ? KeyPress("d", realign_distance) : 
+                back_wall ? KeyPress("w", realisn_distance_frontback) : 
+                right_wall ? KeyPress("a", realign_distance_sides) : 
+                front_wall ? KeyPress("s", realisn_distance_frontback) : 
+                left_wall ? KeyPress("d", realign_distance_sides) : 
             Default:
                 If (stop_on_full_bag && IsBagFull()) then
                     break
         }
     }
     Click, Up
+    Return True
 }
 
 ; Navigates to, and farms in, the bamboo field
@@ -1516,7 +1662,7 @@ MountainTopField(field_loops:=25)
     Sleep, 2500
     KeyPress("a", 700)
     RotateCamera(4)
-    GatherFieldPollen(True, 300, 110, field_loops, 4, True, False, False, False, 1000, 8)
+    GatherFieldPollen(True, 300, 110, field_loops, 4, True, False, False, False, 1000, 1000, 8)
     UnStickIfStuck()
 }
 
@@ -1590,31 +1736,59 @@ PineTreeForest(field_loops:=35)
     KeyPress("a", 420)
     KeyPress("s", 420*2)
     Sleep, 100
-    GatherFieldPollen(True, 400, 100, field_loops, 3, True, False, True, False, 300, 10)
+    GatherFieldPollen(True, 400, 100, field_loops, 3, True, False, True, False, 500, 300, 10)
     UnStickIfStuck()
 }
 
 ; Navigates to, and farms in, the pine tree forest in a manner optimal for using the Tide Popper
-PineTreeForestTidePopper(field_loops:=150, use_extract:=False)
+PineTreeForestTidePopper(field_loops:=110, extract:=False, enzymes:=False, oil:=False, glitter:=False)
 {
     If (field_loops > 0)
         Menu, Tray, Icon, %A_ScriptDir%\icons\pine.ico
     ResetCharacter()
     MoveToAndFireRedCannon()
-    RotateCamera(4)
-    Sleep, 2500
-    ZoomOut(5)
-    KeyPress("s", 800)
-    Sleep, 100
-    Send, {Space down}
-    KeyPress("d", 18000)
-    Send, {Space up}
+    Sleep, 600
+    Jump()
+    Jump()
+    RotateCamera()
+    Keypress("w", 500)
+    Sleep, 4500
+    Jump()
+    RotateCamera()
+    KeyPress("w", 1000)
+    RotateCamera(2)
+    PlaceSprinklers()
     Sleep, 500
-    KeyPress("a", 1000)
-    If (use_extract)
-        UseItemFromInventory("blue extract")
+    ImageSearch,,, A_ScreenWidth//2, A_ScreenHeight//4, A_ScreenWidth, A_ScreenHeight, *90 %A_ScriptDir%\errors\you_must_be_standing_in_a_field_to_build_a_Sprinkler.png
+    If (ErrorLevel == 0)
+        Return
+    If (extract || enzymes || oil || glitter)
+    {
+        UpdateGlobalsFromIni()
+        If (extract && (MinutesSince(Cooldowns_extract) > 10))
+        {
+            If UseItemFromInventory("blue extract")
+                Cooldowns_extract := A_NowUTC
+        }
+        If (enzymes && (MinutesSince(Cooldowns_enzymes) > 10))
+        {
+            If UseItemFromInventory("enzymes", 0)
+                Cooldowns_enzymes := A_NowUTC
+        }
+        If (oil && (MinutesSince(Cooldowns_oil) > 10))
+        {
+            If UseItemFromInventory("oil", 0)
+                Cooldowns_oil := A_NowUTC
+        }
+        If (glitter && (MinutesSince(Cooldowns_glitter) > 10))
+        {
+            If UseItemFromInventory("glitter", 0)
+                Cooldowns_glitter := A_NowUTC
+        }
+        UpdateIniFromGlobals()
+    }
     Send, LShift
-    GatherFieldPollen(True, 500, 120, field_loops, 2, False, False, True, True, 300, 10)
+    GatherFieldPollen(True, 500, 120, field_loops, 2, False, False, True, True, 300, 500, 10)
     Send, LShift
     UnStickIfStuck()
 }
@@ -1715,7 +1889,7 @@ StrawberryField(field_loops:=30)
     KeyPress("a", 4000)
     ZoomOut(5)
     RotateCamera(2)
-    GatherFieldPollen(True, 650, 125, field_loops, 3, True, False, True)
+    GatherFieldPollen(True, 500, 120, field_loops, 3, True, False, True, False, 100, 100)
     UnStickIfStuck()
 }
 
@@ -1736,7 +1910,53 @@ StumpField(field_loops:=25)
     UnStickIfStuck()
 }
 
-; Navigates to, and sits in, the stump field
+; Navigates to, and farms in, the stump field
+StumpFieldPlus(minutes_in_field:=10, extract:=False, enzymes:=False, oil:=False, glitter:=False)
+{
+    If (minutes_in_field > 0)
+        Menu, Tray, Icon, %A_ScriptDir%\icons\stump.ico
+    ResetCharacter()
+    MoveToAndFireRedCannon()
+    RotateCamera(-2)
+    Sleep, 2500
+    ZoomOut(5)
+    KeyPress("w", 12250)
+    Keypress("d", 500)
+    PlaceSprinklers()
+    Sleep, 500
+    ImageSearch,,, A_ScreenWidth//2, A_ScreenHeight//4, A_ScreenWidth, A_ScreenHeight, *90 %A_ScriptDir%\errors\you_must_be_standing_in_a_field_to_build_a_Sprinkler.png
+    If (ErrorLevel == 0)
+        Return
+    If (extract || enzymes || oil || glitter)
+    {
+        UpdateGlobalsFromIni()
+        If (extract && (MinutesSince(Cooldowns_extract) > 10))
+        {
+            If UseItemFromInventory("blue extract")
+                Cooldowns_extract := A_NowUTC
+        }
+        If (enzymes && (MinutesSince(Cooldowns_enzymes) > 10))
+        {
+            If UseItemFromInventory("enzymes")
+                Cooldowns_enzymes := A_NowUTC
+        }
+        If (oil && (MinutesSince(Cooldowns_oil) > 10))
+        {
+            If UseItemFromInventory("oil")
+                Cooldowns_oil := A_NowUTC
+        }
+        If (glitter && (MinutesSince(Cooldowns_glitter) > 15))
+        {
+            If UseItemFromInventory("glitter")
+                Cooldowns_glitter := A_NowUTC
+        }
+        UpdateIniFromGlobals()
+    }
+    GatherFieldPollenPlus(True, minutes_in_field)
+    UnStickIfStuck()
+}
+
+; Navigates to, and sits in, the stump field, in order to slay the snail
 StumpSnail(minutes_to_stand_in_stump:=10)
 {
     Menu, Tray, Icon, %A_ScriptDir%\icons\stump.ico
@@ -1744,6 +1964,9 @@ StumpSnail(minutes_to_stand_in_stump:=10)
     Sleep, 500
     PlaceSprinklers()
     Sleep, 500
+    ImageSearch,,, A_ScreenWidth//2, A_ScreenHeight//4, A_ScreenWidth, A_ScreenHeight, *90 %A_ScriptDir%\errors\you_must_be_standing_in_a_field_to_build_a_Sprinkler.png
+    If (ErrorLevel == 0)
+        Return
     Click, Down
     Loop, %minutes_to_stand_in_stump%
     {
@@ -1770,7 +1993,7 @@ SunflowerField(field_loops:=30)
     RotateCamera(2)
     KeyPress("w", 300)
     ZoomOut(5)
-    GatherFieldPollen(True, 300, 100, field_loops, 3, True, False, False, False, 200, 6)
+    GatherFieldPollen(True, 300, 100, field_loops, 3, True, False, False, False, 0, 200, 6)
     UnStickIfStuck()
 }
 
@@ -1785,9 +2008,11 @@ ClickMenu(menu_name)
     Sleep, 500
 }
 
+; Returns True if the item was used, and False if it wasn't found
 ; Opens the inventory, uses an item from it, then closes the inventory - ie. UseItemFromInventory("gumdrops"), UseItemFromInventory("field dice"), or UseItemFromInventory("box-o-frogs")
 UseItemFromInventory(item_name, up_scrolls_before_searching:=60)
 {
+    item_was_used := False
     MouseGetPos, MouseX, MouseY
     MouseMove, Stats_menus["Eggs"], Stats_menus["y"]
     ClickMenu("Eggs")
@@ -1796,17 +2021,21 @@ UseItemFromInventory(item_name, up_scrolls_before_searching:=60)
     {
         Click, WheelUp
         Sleep, 50
+        ImageSearch, FoundX, FoundY, 80, 150, 325, 250, *90 %A_ScriptDir%\images\items\ticket.png
+        If (ErrorLevel == 0)
+            Break
     }
     total_shown_items := Floor(((A_ScreenHeight - 236) / 95))
     remaining_items_to_scroll_through := 100 - total_shown_items
     scrolls_per_imagesearch := Floor(total_shown_items/5*3)
     While, remaining_items_to_scroll_through > 0
     {
-        Sleep, 250
+        Sleep, 1000
         ImageSearch, FoundX, FoundY, 0, 0, 500, A_ScreenHeight, *90 %A_ScriptDir%\images\items\%item_name%.png
         If (ErrorLevel == 0)
         {
             MouseClickDrag, Left, FoundX-50, FoundY+40, A_ScreenWidth//2, A_ScreenHeight//2
+            item_was_used := True
             Break
         }
         remaining_items_to_scroll_through -= 5/3*scrolls_per_imagesearch
@@ -1818,22 +2047,28 @@ UseItemFromInventory(item_name, up_scrolls_before_searching:=60)
     }
     ClickMenu("Eggs")
     MouseMove, MouseX, MouseY
+    Return item_was_used
 }
 
-; Does a bug run only if enemies needed for the current polar bear quest are alive, repeating until no more bug runs are required
-PolarRun()
+; Does a bug run only if enemies needed for the current polar bear quest are alive, optionally repeating until no more bug runs are required before doing anything else
+PolarRun(prioritize_over_everything:=False)
 {
     Menu, Tray, Icon, %A_ScriptDir%\icons\polar.ico
     ClickMenu("Quests")
     Loop, 10
     {
         Sleep, 200
-        ImageSearch, FoundX, FoundY, 0, 0, A_ScreenWidth//3, A_ScreenHeight, *90 %A_ScriptDir%\images\quests\polar\complete.png
+        ImageSearch,,, 0, 0, A_ScreenWidth//3, A_ScreenHeight, *90 %A_ScriptDir%\images\quests\polar\complete.png
         If (ErrorLevel == 0)
         {
             ClickMenu("Quests")
             BugRun()
-            Return PolarRun()
+            If prioritize_over_everything
+            {
+                Return PolarRun(true)
+            } Else {
+                Return
+            }
         }
     }
 
@@ -1841,12 +2076,89 @@ PolarRun()
     polar_quests := {aromatic_pie: 30, beetle_brew: 5, candied_beetles: 5, complete: 1, exotic_salad: 1, extreme_stir_fry: 30, high_protein_bug_bar: 20, ladybug_poppers: 5, mantis_meatballs: 999, prickly_pears: 1, pumpkin_pie: 60, scorpion_salad: 20, spiced_kebab: 60, spider_pot_pie: 30, spooky_stew: 30, strawberry_skewers: 20, teriyaki_jerky: 60, thick_smoothie: 1, trail_mix: 1}
     For polar_quest_name, polar_quest_cooldown in polar_quests
     {
-        ImageSearch, FoundX, FoundY, 0, 0, A_ScreenWidth//3, A_ScreenHeight, *90 %A_ScriptDir%\images\quests\polar\%polar_quest_name%.png
+        ImageSearch,,, 0, 0, A_ScreenWidth//3, A_ScreenHeight, *90 %A_ScriptDir%\images\quests\polar\%polar_quest_name%.png
         If ( (ErrorLevel == 0) && (MinutesSince(Cooldowns_bugrun) > polar_quest_cooldown) )
         {
             ClickMenu("Quests")
             BugRun()
-            Return PolarRun()
+            If prioritize_over_everything
+            {
+                Return PolarRun(true)
+            } Else {
+                Return
+            }
+        }
+    }
+
+    ClickMenu("Quests")
+    Return False
+}
+
+; If your Bucko quest is complete, turns it in & grabs a new one
+BuckoQuest()
+{
+    Menu, Tray, Icon, %A_ScriptDir%\icons\bucko.ico
+    ClickMenu("Quests")
+    Loop, 10
+    {
+        Sleep, 200
+        quest_is_complete := False
+        ImageSearch,,, 0, 0, A_ScreenWidth//2, A_ScreenHeight, *90 %A_ScriptDir%\images\quests\bucko\complete.png
+        If (ErrorLevel == 0)
+            quest_is_complete := True
+            
+        ImageSearch,,, 0, 0, A_ScreenWidth//2, A_ScreenHeight, *90 %A_ScriptDir%\images\quests\bucko\complete2.png
+        If (ErrorLevel == 0)
+            quest_is_complete := True
+        
+        If quest_is_complete
+        {
+            ClickMenu("Quests")
+            ResetCharacter(3)
+            FaceHive(false)
+            MoveToSlot(3)
+            KeyPress("w", 5750)
+            KeyPress("d", 5500)
+            KeyPress("w", 2300)
+            KeyPress("d", 11000)
+            Sleep, 100
+            Jump()
+            KeyPress("d", 500)
+            KeyPress("s", 1500)
+            KeyPress("a", 3200)
+            KeyPress("w", 1300)
+            KeyPress("d", 500)
+            Jump()
+            KeyPress("d", 500)
+            Sleep, 500
+            If !IsMachineReady()
+                Return False
+            EPress()
+            Sleep, 1000
+            MouseGetPos, MouseOriginalX, MouseOriginalY
+            MouseMove, 150, 150
+            ImageSearch, FoundX, FoundY, 0, A_ScreenHeight//2, A_ScreenWidth, A_ScreenHeight, *90 %A_ScriptDir%\images\gifted_bucko_bee_dialogue.png
+            If(ErrorLevel == 0)
+            {
+                MouseMove, FoundX, FoundY
+                Sleep, 500
+                Loop, 2
+                {
+                    EPress()
+                    Sleep, 500
+                    Loop, 12
+                    {
+                        Click, Left
+                        Sleep, 300
+                    }
+                    Sleep, 2000
+                }
+                MouseMove, MouseOriginalX, MouseOriginalY
+                Sleep, 100
+                Return True
+            } Else {
+                Return False
+            }
         }
     }
 
