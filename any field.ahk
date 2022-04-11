@@ -18,6 +18,6 @@ $^p::		; CTRL+P
 $^F4::		; CTRL+F4
 {
 	Menu, Tray, Icon, %A_ScriptDir%\icons\status\in-progress.ico
-	GatherFieldPollen(False, 300, 100, 99999, 3)
+	GatherFieldPollenPlus(False, 99999)
 	Menu, Tray, Icon, %A_ScriptDir%\icons\status\success.ico
 }
