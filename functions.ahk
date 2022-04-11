@@ -235,7 +235,12 @@ Reconnect()
     EnvAdd, Cooldowns_planter3, Stats_seconds_to_wait_on_reconnect, Seconds
     UpdateIniFromGlobals()
 
-    Sleep, (Stats_seconds_to_wait_on_reconnect * 1000)
+    Loop, %Stats_seconds_to_wait_on_reconnect%
+    {
+        Sleep, 1000
+        If (IsConnected())
+            Break
+    }
 
     If !(IsConnected())
         Return Reconnect()
@@ -251,6 +256,7 @@ Reconnect()
             Return Reconnect()
     }
 
+    Sleep, 5000
     KeyPress("w", 5000)
     KeyPress("s", 800)
     (Stats_hive_slot < 3) ? KeyPress("d", (1200 * (3 - Stats_hive_slot))) : KeyPress("a", (1200 * (Stats_hive_slot - 3)))   ; reversed-camera MoveToSlot() from the middle spawn-in location
@@ -374,7 +380,7 @@ FaceHive(should_face_hive:=true)
     Reconnect()
 }
 
-; Walks from the initial hiveslot to a new slot, assuming facing away from the hive
+; Walks from the initial hiveslot to a new slot, assuming camera is facing away from the hive
 MoveToSlot(new_slot)
 {
     distance_between_slots := 1200
