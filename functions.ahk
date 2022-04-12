@@ -1,6 +1,6 @@
 ;; Made by Lessy / Saber
 #Include configuration.ahk
-If (GetConfigVersion() != 4)
+If (GetConfigVersion() != 5)
 {
     MsgBox, Your config.ini file is out of date, please press "OK" then run "reset config.ahk"
     ExitApp
@@ -256,9 +256,8 @@ Reconnect()
             Return Reconnect()
     }
 
-    Sleep, 5000
-    KeyPress("w", 5000)
-    KeyPress("s", 800)
+    Sleep, %seconds_to_wait_after_connect%
+    KeyPress("w", 2100)
     (Stats_hive_slot < 3) ? KeyPress("d", (1200 * (3 - Stats_hive_slot))) : KeyPress("a", (1200 * (Stats_hive_slot - 3)))   ; reversed-camera MoveToSlot() from the middle spawn-in location
     Sleep, 1000
     If !IsMachineReady()

@@ -7,6 +7,7 @@ global Stats_sprinkler_amount := 1
 global Stats_hive_slot := 1
 global Stats_VIP_to_reconnect_to := "https://www.roblox.com/games/1537690962?privateServerLinkCode=508610322381920906618415046657"
 global Stats_seconds_to_wait_on_reconnect := 120
+global Stats_seconds_to_wait_after_connect := 5
 global Stats_movespeed := 28
 global Stats_movespeed_factor := 28 / movespeed
 global Stats_menus := {Eggs: 40, Quests: 90, Bees: 145, Badges: 200, System: 260, Shop: 315, y: 140}
@@ -90,6 +91,7 @@ ConfigCreate()
     hive_slot=%Stats_hive_slot%
     VIP_to_reconnect_to=%Stats_VIP_to_reconnect_to%
     seconds_to_wait_on_reconnect=%Stats_seconds_to_wait_on_reconnect%
+    seconds_to_wait_after_connect=%Stats_seconds_to_wait_after_connect%
     movespeed=%Stats_movespeed%
     menus=40,90,145,200,260,315,140
 
@@ -124,7 +126,7 @@ ConfigCreate()
     [Cooldowns]
 
     [ConfigVersion]
-    current=4
+    current=5
     ), config.ini
     UpdateIniFromGlobals()
     MsgBox, A new config.ini file has been created, make sure to edit it before running anything!
@@ -179,7 +181,7 @@ UpdateIniFromGlobals()
 UpdateGlobalsFromIni()
 {
     ; reading all the stats in from config.ini
-    global_stat_vars_to_read := ["Stats_sprinkler_amount", "Stats_hive_slot", "Stats_VIP_to_reconnect_to", "Stats_seconds_to_wait_on_reconnect", "Stats_movespeed"]
+    global_stat_vars_to_read := ["Stats_sprinkler_amount", "Stats_hive_slot", "Stats_VIP_to_reconnect_to", "Stats_seconds_to_wait_on_reconnect", "Stats_seconds_to_wait_after_connect", "Stats_movespeed"]
     For each, global_variable_name in global_stat_vars_to_read
     {
         ini_key := SubStr(global_variable_name, 7)
