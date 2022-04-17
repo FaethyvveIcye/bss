@@ -256,7 +256,8 @@ Reconnect()
             Return Reconnect()
     }
 
-    Sleep, %seconds_to_wait_after_connect%
+    to_sleep := Stats_seconds_to_wait_after_connect * 1000
+    Sleep, %to_sleep%
     KeyPress("w", 2100)
     (Stats_hive_slot < 3) ? KeyPress("d", (1200 * (3 - Stats_hive_slot))) : KeyPress("a", (1200 * (Stats_hive_slot - 3)))   ; reversed-camera MoveToSlot() from the middle spawn-in location
     Sleep, 1000
