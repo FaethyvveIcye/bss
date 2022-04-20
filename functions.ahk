@@ -2057,7 +2057,7 @@ UseItemFromInventory(item_name, up_scrolls_before_searching:=60)
 }
 
 ; Does a bug run only if enemies needed for the current polar bear quest are alive
-PolarRun(prioritize_over_everything:=False)
+PolarRun()
 {
     Menu, Tray, Icon, %A_ScriptDir%\icons\polar.ico
     ClickMenu("Quests")
@@ -2069,6 +2069,7 @@ PolarRun(prioritize_over_everything:=False)
         {
             ClickMenu("Quests")
             BugRun()
+            Return True
         }
     }
 
@@ -2081,6 +2082,7 @@ PolarRun(prioritize_over_everything:=False)
         {
             ClickMenu("Quests")
             BugRun()
+            Return True
         }
     }
 
