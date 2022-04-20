@@ -2056,7 +2056,7 @@ UseItemFromInventory(item_name, up_scrolls_before_searching:=60)
     Return item_was_used
 }
 
-; Does a bug run only if enemies needed for the current polar bear quest are alive, optionally repeating until no more bug runs are required before doing anything else
+; Does a bug run only if enemies needed for the current polar bear quest are alive
 PolarRun(prioritize_over_everything:=False)
 {
     Menu, Tray, Icon, %A_ScriptDir%\icons\polar.ico
@@ -2069,12 +2069,6 @@ PolarRun(prioritize_over_everything:=False)
         {
             ClickMenu("Quests")
             BugRun()
-            If prioritize_over_everything
-            {
-                Return PolarRun(true)
-            } Else {
-                Return
-            }
         }
     }
 
@@ -2083,16 +2077,10 @@ PolarRun(prioritize_over_everything:=False)
     For polar_quest_name, polar_quest_cooldown in polar_quests
     {
         ImageSearch,,, 0, 0, A_ScreenWidth//3, A_ScreenHeight, *90 %A_ScriptDir%\images\quests\polar\%polar_quest_name%.png
-        If ( (ErrorLevel == 0) && (MinutesSince(Cooldowns_bugrun) > polar_quest_cooldown) )
+        If ( ((ErrorLevel == 0) && (MinutesSince(Cooldowns_bugrun) > polar_quest_cooldown)) || (ErrorLevel == 1) )
         {
             ClickMenu("Quests")
             BugRun()
-            If prioritize_over_everything
-            {
-                Return PolarRun(true)
-            } Else {
-                Return
-            }
         }
     }
 
