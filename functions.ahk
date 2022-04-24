@@ -2078,15 +2078,26 @@ PolarRun()
     For polar_quest_name, polar_quest_cooldown in polar_quests
     {
         ImageSearch,,, 0, 0, A_ScreenWidth//3, A_ScreenHeight, *90 %A_ScriptDir%\images\quests\polar\%polar_quest_name%.png
-        If ( ((ErrorLevel == 0) && (MinutesSince(Cooldowns_bugrun) > polar_quest_cooldown)) || (ErrorLevel == 1) )
+        If (ErrorLevel == 0)
         {
             ClickMenu("Quests")
-            BugRun()
-            Return True
+            If (MinutesSince(Cooldowns_bugrun) > polar_quest_cooldown)
+            {
+                BugRun()
+                Return True
+            } Else {
+                Return False
+            }
         }
     }
-
+    MouseMove, Stats_menus["Eggs"], Stats_menus["y"]+100
+    Loop, 10
+    {
+        Click, WheelUp
+        Sleep, 50
+    }
     ClickMenu("Quests")
+    BugRun()
     Return False
 }
 
