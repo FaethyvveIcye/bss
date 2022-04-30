@@ -1601,7 +1601,9 @@ CloverField(field_loops:=30)
     KeyPress("w", 5750)
     KeyPress("d", 7000)
     KeyPress("w", 500)
-    Sleep, 500
+    Sleep, 300
+    KeyPress("s", 50)
+    Sleep, 300
     Jump()
     KeyPress("d", 2000)
     Sleep, 500
@@ -1667,8 +1669,7 @@ MountainTopField(field_loops:=25)
     ZoomOut(5)
     Sleep, 2500
     KeyPress("a", 700)
-    RotateCamera(4)
-    GatherFieldPollen(True, 300, 110, field_loops, 4, True, False, False, False, 1000, 1000, 8)
+    GatherFieldPollen(True, 300, 110, field_loops, 4)
     UnStickIfStuck()
 }
 
@@ -1812,7 +1813,7 @@ PineapplePatch(field_loops:=25)
     KeyPress("w", 4500)
     RotateCamera(2)
     KeyPress("w", 1600)
-    GatherFieldPollen(True, 600, 120, field_loops, 2, True, True)
+    GatherFieldPollen(True, 600, 120, field_loops, 2, True, True, False, False, 100, 100, 5)
     UnStickIfStuck()
 }
 
@@ -1835,7 +1836,7 @@ PumpkinPatch(field_loops:=20)
     KeyPress("d", 2300)
     KeyPress("w", 3200)
     ZoomOut(5)
-    GatherFieldPollen(True, 500, 120, field_loops, 3, True)
+    GatherFieldPollen(True, 500, 120, field_loops, 3, True, False, False, False, 0, 100, 10)
     UnStickIfStuck()
 }
 
@@ -1859,7 +1860,7 @@ RoseField(field_loops:=20)
     KeyPress("d", 2100)
     RotateCamera(4)
     ZoomOut(5)
-    GatherFieldPollen(True, 600, 110, field_loops, 2, True, True)
+    GatherFieldPollen(True, 600, 110, field_loops, 2, True, True, False, False, 150, 100, 5)
     UnStickIfStuck()
 }
 
@@ -1999,7 +2000,7 @@ SunflowerField(field_loops:=30)
     RotateCamera(2)
     KeyPress("w", 300)
     ZoomOut(5)
-    GatherFieldPollen(True, 300, 100, field_loops, 3, True, False, False, False, 0, 200, 6)
+    GatherFieldPollen(True, 300, 100, field_loops, 3)
     UnStickIfStuck()
 }
 
@@ -2081,6 +2082,7 @@ PolarRun()
         If (ErrorLevel == 0)
         {
             ClickMenu("Quests")
+            MouseMove, MouseX, MouseY
             If (MinutesSince(Cooldowns_bugrun) > polar_quest_cooldown)
             {
                 BugRun()
@@ -2090,6 +2092,7 @@ PolarRun()
             }
         }
     }
+    MouseGetPos, MouseX, MouseY
     MouseMove, Stats_menus["Eggs"], Stats_menus["y"]+100
     Loop, 10
     {
@@ -2097,6 +2100,7 @@ PolarRun()
         Sleep, 50
     }
     ClickMenu("Quests")
+    MouseMove, MouseX, MouseY
     BugRun()
     Return False
 }
