@@ -124,13 +124,13 @@ HarvestPlanter(planter_number, harvest_unfinished_planter:=true)
                 Sleep, 1000
                 Click, Left
                 MouseMove, MouseX, MouseY
-                If harvest_unfinished_planter
-                    Break
-                Cooldowns_planter%planter_number% := A_NowUTC
-                EnvSub, Cooldowns_planter%planter_number%, Planters_planter%planter_number%_reuse_time[each], Minutes
-                EnvAdd, Cooldowns_planter%planter_number%, 15, Minutes
-                UpdateIniFromGlobals()
-                Return False
+                If !(harvest_unfinished_planter)
+                {
+                    Cooldowns_planter%planter_number% := A_NowUTC
+                    EnvSub, Cooldowns_planter%planter_number%, Planters_planter%planter_number%_reuse_time[each], Minutes
+                    EnvAdd, Cooldowns_planter%planter_number%, 15, Minutes
+                    UpdateIniFromGlobals()
+                }
             }
             needs_to_be_placed_again := True
             If (Planters_planter%planter_number%_fields.Length() == 1)
