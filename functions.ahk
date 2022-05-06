@@ -266,7 +266,7 @@ Reconnect()
     EPress()
     MouseMove, A_ScreenWidth//2, A_ScreenHeight//2
     ResetCharacter()
-    Return
+    Return True
 }
 
 ; Reconnects to the VIP provided in `config.ini` if disconnected
@@ -288,7 +288,7 @@ IsBagFull()
 RotateCamera(times:=1)
 {
     If times == 0
-        Return
+        Return True
 
     camera_rotation_loops := Mod(Abs(times), 8)
     Loop, %camera_rotation_loops%
@@ -357,7 +357,7 @@ FaceHive(should_face_hive:=true)
             {
                 If(should_face_hive)
                     RotateCamera(4)
-                Return
+                Return True
             }
             ; gifted hiveslot check
             KeyPress("o")
@@ -368,7 +368,7 @@ FaceHive(should_face_hive:=true)
             {
                 If(should_face_hive)
                     RotateCamera(4)
-                Return
+                Return True
             }
             ; rotating the camera & checking again
             RotateCamera(4)
@@ -411,9 +411,9 @@ IsStuck()
         ; for a full-screen check, change co-ordinates to: 0, 0, A_ScreenWidth, A_ScreenHeight
         ImageSearch,,, A_ScreenWidth//2, 0, A_ScreenWidth, A_ScreenHeight//2, *90 %A_LoopFileFullPath%
         If (ErrorLevel == 0)
-            Return true
+            Return True
     }
-    Return false
+    Return False
 }
 
 ; Helper function that presses "E" to get out of a shop that you might be stuck in, then waits for the shop UI to close
@@ -438,7 +438,7 @@ EmptyHiveBalloon(reset_after_emptying:=false)
 {
     Menu, Tray, Icon, %A_ScriptDir%\icons\balloon.ico
     If (MinutesSince(Cooldowns_balloon) <= 2)
-        Return
+        Return False
 
     If (MinutesSince(Cooldowns_whirligig) > 1)
     {
@@ -449,10 +449,10 @@ EmptyHiveBalloon(reset_after_emptying:=false)
 
     ImageSearch,,, A_ScreenWidth//3, 0, A_ScreenWidth, A_ScreenHeight//3, *90 %A_ScriptDir%\images\can_make_honey_from_balloon.png
     If (ErrorLevel != 0)
-        Return
+        Return False
 
     If !IsMachineReady()
-        Return
+        Return False
 
     EPress()
     Cooldowns_balloon := A_NowUTC
@@ -471,6 +471,7 @@ EmptyHiveBalloon(reset_after_emptying:=false)
     }
     Cooldowns_balloon := A_NowUTC
     UpdateIniFromGlobals()
+    Return True
 }
 
 ; Uses a Whirligig or resets if it's on cooldown, returns True if one is used and False otherwise
@@ -524,7 +525,7 @@ CircleForLoot(circles:=5, repeats:=0)
 WealthClock()
 {
     If (MinutesSince(Cooldowns_wealthclock) < 60)
-        Return
+        Return False
 
     Menu, Tray, Icon, %A_ScriptDir%\icons\clock.ico
 
@@ -540,17 +541,18 @@ WealthClock()
     Send, {w up}
     Sleep, 1500
     If !IsMachineReady()
-        Return
+        Return False
     EPress(20)
     Cooldowns_wealthclock := A_NowUTC
     UpdateIniFromGlobals()
+    Return True
 }
 
 ; Grabs ant pass, then resets, skipping if on cooldown automatically
 AntPass()
 {
     If (MinutesSince(Cooldowns_antpass) < 120)
-        Return
+        Return False
 
     Menu, Tray, Icon, %A_ScriptDir%\icons\ant.ico
     ResetCharacter()
@@ -584,6 +586,7 @@ AntPass()
     UpdateIniFromGlobals()
     Sleep, 1000
     UnStickIfStuck()
+    Return True
 }
 
 ; Plays Memory Match - not yet impelmented
@@ -617,7 +620,7 @@ BugRun()
     Sleep, 500
     ImageSearch,,, A_ScreenWidth//2, A_ScreenHeight//4, A_ScreenWidth, A_ScreenHeight, *90 %A_ScriptDir%\errors\you_must_be_standing_in_a_field_to_build_a_Sprinkler.png
     If (ErrorLevel == 0)
-        Return
+        Return False
     Loop, 4
     {
         Sleep, 100
@@ -692,7 +695,7 @@ BugRun()
     Sleep, 500
     ImageSearch,,, A_ScreenWidth//2, A_ScreenHeight//4, A_ScreenWidth, A_ScreenHeight, *90 %A_ScriptDir%\errors\you_must_be_standing_in_a_field_to_build_a_Sprinkler.png
     If (ErrorLevel == 0)
-        Return
+        Return False
     Loop, 4
     {
         Sleep, 100
@@ -782,7 +785,7 @@ BugRun()
     Sleep, 500
     ImageSearch,,, A_ScreenWidth//2, A_ScreenHeight//4, A_ScreenWidth, A_ScreenHeight, *90 %A_ScriptDir%\errors\you_must_be_standing_in_a_field_to_build_a_Sprinkler.png
     If (ErrorLevel == 0)
-        Return
+        Return False
     Loop, 5
     {
         Sleep, 100
@@ -801,7 +804,7 @@ BugRun()
     Sleep, 500
     ImageSearch,,, A_ScreenWidth//2, A_ScreenHeight//4, A_ScreenWidth, A_ScreenHeight, *90 %A_ScriptDir%\errors\you_must_be_standing_in_a_field_to_build_a_Sprinkler.png
     If (ErrorLevel == 0)
-        Return
+        Return False
     Loop, 5
     {
         Sleep, 100
@@ -897,11 +900,11 @@ BugRun()
 Mondo()
 {
     If (MinutesSince(Cooldowns_mondo) < 40)
-        Return
+        Return False
 
     FormatTime, CurrentMinute, A_NowUTC, m
     If (CurrentMinute >= 14)
-        Return
+        Return False
 
     Menu, Tray, Icon, %A_ScriptDir%\icons\mondo.ico
     Cooldowns_mondo := A_NowUTC
@@ -1010,7 +1013,7 @@ AntChallenge()
     RotateCamera(1)
     Sleep, 500
     If !IsMachineReady()
-        Return
+        Return False
     EPress(5)
     Sleep, 1000
     KeyPress("s", 1500)
@@ -1026,13 +1029,14 @@ AntChallenge()
     ResetCharacter()
     Sleep, 8000
     UnStickIfStuck()
+    Return True
 }
 
 ; Navigates to and activates the Blue Field Booster in Blue HQ
 BlueFieldBooster()
 {
     If (MinutesSince(Cooldowns_blue_field_booster) < 60)
-        Return
+        Return False
 
     Menu, Tray, Icon, %A_ScriptDir%\icons\blue_field_booster.ico
     ResetCharacter(2)
@@ -1050,17 +1054,18 @@ BlueFieldBooster()
     KeyPress("w", 2200)
     Sleep, 500
     If !IsMachineReady()
-        Return
+        Return False
     EPress(5)
     Cooldowns_blue_field_booster := A_NowUTC
     UpdateIniFromGlobals()
+    Return True
 }
 
 ; Navigates to and activates the Red Field Booster in Red HQ
 RedFieldBooster()
 {
     If (MinutesSince(Cooldowns_red_field_booster) < 60)
-        Return
+        Return False
 
     Menu, Tray, Icon, %A_ScriptDir%\icons\red_field_booster.ico
     ResetCharacter(2)
@@ -1082,10 +1087,11 @@ RedFieldBooster()
     KeyPress("a", 1000)
     Sleep, 500
     If !IsMachineReady()
-        Return
+        Return False
     EPress(5)
     Cooldowns_red_field_booster := A_NowUTC
     UpdateIniFromGlobals()
+    Return True
 }
 
 
@@ -1238,7 +1244,7 @@ WindShrine(item_index:=0, item_amount:=1)
 Stockings()
 {
     If (MinutesSince(Cooldowns_stockings) < 60)
-        Return
+        Return False
 
     Menu, Tray, Icon, %A_ScriptDir%\icons\brown_bear.ico
     ResetCharacter(3)
@@ -1255,20 +1261,21 @@ Stockings()
     KeyPress("d", 500)
     Sleep, 500
     If !IsMachineReady()
-        Return
+        Return False
     EPress(5)
     Cooldowns_stockings := A_NowUTC
     UpdateIniFromGlobals()
     KeyPress("w", 1000)
     KeyPress("d", 350)
     KeyPress("s", 1500)
+    Return True
 }
 
 ; Navigates to, digs in to, and collects the yummies from, Polar Bear's Beesmas Feast
 BeesmasFeast()
 {
     If (MinutesSince(Cooldowns_beesmas_feast) < 90)
-        Return
+        Return False
 
     Menu, Tray, Icon, %A_ScriptDir%\icons\polar_bear.ico
     ResetCharacter(3)
@@ -1286,19 +1293,20 @@ BeesmasFeast()
     KeyPress("w", 900)
     Sleep, 500
     If !IsMachineReady()
-        Return
+        Return False
     EPress(5)
     Cooldowns_beesmas_feast := A_NowUTC
     UpdateIniFromGlobals()
     Sleep, 1500
     CircleForLoot()
+    Return True
 }
 
 ; Navigates to, heats up, and collects the loot from, Dapper Bear's Samovar
 Samovar()
 {
     If (MinutesSince(Cooldowns_samovar) < 360)
-        Return
+        Return False
 
     Menu, Tray, Icon, %A_ScriptDir%\icons\dapper_bear.ico
     ResetCharacter(2)
@@ -1323,19 +1331,20 @@ Samovar()
     KeyPress("w", 950)
     Sleep, 500
     If !IsMachineReady()
-        Return
+        Return False
     EPress(5)
     Cooldowns_samovar := A_NowUTC
     UpdateIniFromGlobals()
     Sleep, 3000
     CircleForLoot(7)
+    Return True
 }
 
 ; Navigates to, ganders at, and collects the goodies from, Onett's Lid Art
 LidArt()
 {
     If (MinutesSince(Cooldowns_lid_art) < 480)
-        Return
+        Return False
 
     Menu, Tray, Icon, %A_ScriptDir%\icons\onett.ico
     ResetCharacter(3)
@@ -1353,20 +1362,21 @@ LidArt()
     KeyPress("w", 300)
     Sleep, 1000
     If !IsMachineReady()
-        Return
+        Return False
     EPress(5)
     Cooldowns_lid_art := A_NowUTC
     UpdateIniFromGlobals()
     Sleep, 3000
     KeyPress("a", 200)
     CircleForLoot(7)
+    Return True
 }
 
 ; Navigates to, admires, and collects the wax from, Riley Bee's Honeyday Candles
 HoneydayCandles()
 {
     If (MinutesSince(Cooldowns_honeyday_candles) < 240)
-        Return
+        Return False
 
     Menu, Tray, Icon, %A_ScriptDir%\icons\riley.ico
     ResetCharacter(2)
@@ -1389,13 +1399,14 @@ HoneydayCandles()
     KeyPress("w", 2000)
     Sleep, 500
     If !IsMachineReady()
-        Return
+        Return False
     EPress(5)
     Cooldowns_honeyday_candles := A_NowUTC
     UpdateIniFromGlobals()
     Sleep, 5000
     RotateCamera(4)
     CircleForLoot()
+    Return True
 }
 
 ; Gathers field pollen, realigning with regards to the presence of a supreme saturator, credits to zez for the idea
@@ -1768,7 +1779,7 @@ PineTreeForestTidePopper(field_loops:=110, extract:=False, enzymes:=False, oil:=
     Sleep, 500
     ImageSearch,,, A_ScreenWidth//2, A_ScreenHeight//4, A_ScreenWidth, A_ScreenHeight, *90 %A_ScriptDir%\errors\you_must_be_standing_in_a_field_to_build_a_Sprinkler.png
     If (ErrorLevel == 0)
-        Return
+        Return False
     If (extract || enzymes || oil || glitter)
     {
         UpdateGlobalsFromIni()
@@ -1933,7 +1944,7 @@ StumpFieldPlus(minutes_in_field:=10, extract:=False, enzymes:=False, oil:=False,
     Sleep, 500
     ImageSearch,,, A_ScreenWidth//2, A_ScreenHeight//4, A_ScreenWidth, A_ScreenHeight, *90 %A_ScriptDir%\errors\you_must_be_standing_in_a_field_to_build_a_Sprinkler.png
     If (ErrorLevel == 0)
-        Return
+        Return False
     If (extract || enzymes || oil || glitter)
     {
         UpdateGlobalsFromIni()
@@ -1973,7 +1984,7 @@ StumpSnail(minutes_to_stand_in_stump:=10)
     Sleep, 500
     ImageSearch,,, A_ScreenWidth//2, A_ScreenHeight//4, A_ScreenWidth, A_ScreenHeight, *90 %A_ScriptDir%\errors\you_must_be_standing_in_a_field_to_build_a_Sprinkler.png
     If (ErrorLevel == 0)
-        Return
+        Return False
     Click, Down
     Loop, %minutes_to_stand_in_stump%
     {
