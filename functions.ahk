@@ -60,6 +60,29 @@ IsMachineReady()
     Return (ErrorLevel == 0)
 }
 
+; Clicks "Keep Old" or "Replace" if the window is open
+KeepOrReplace(keep:=True)
+{
+    MouseGetPos, MouseX, MouseY
+    ImageSearch, KeepX, KeepY, 0, A_ScreenHeight//2, A_ScreenWidth, A_ScreenHeight, *90 %A_ScriptDir%\images\keep.png
+    ImageSearch, ReplaceX, ReplaceY, 0, A_ScreenHeight//2, A_ScreenWidth, A_ScreenHeight, *90 %A_ScriptDir%\images\replace.png
+    If (ErrorLevel != 0)
+        Return False
+
+    Click, Up
+    If (keep)
+    {
+        MouseMove, KeepX, KeepY
+    } Else {
+        MouseMove, ReplaceX, ReplaceY
+    }
+    Sleep, 500
+    Click, Left
+    Sleep, 500
+    MouseMove, MouseX, MouseY
+    Return True
+}
+
 ; Harvests the specified planter from the field it's currently in, returning True if the planter is ready to be re-placed, and False otherwise
 HarvestPlanter(planter_number, harvest_unfinished_planter:=true)
 {
@@ -1024,7 +1047,12 @@ AntChallenge()
     Sleep, 100
     PlaceSprinklers()
     Click, Down
-    Sleep, 5 * 60 * 1000
+    Loop, 300
+    {
+        If (KeepOrReplace())
+            Return True
+        Sleep, 1000
+    }
     Click, Up
     ResetCharacter()
     Sleep, 8000
