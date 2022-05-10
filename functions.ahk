@@ -1050,12 +1050,16 @@ AntChallenge()
     Loop, 300
     {
         If (KeepOrReplace())
+        {
+            Sleep, 3000
             Return True
+        }
         Sleep, 1000
     }
     Click, Up
     ResetCharacter()
     Sleep, 8000
+    KeepOrReplace()
     UnStickIfStuck()
     Return True
 }
