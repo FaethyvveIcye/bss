@@ -718,7 +718,7 @@ BugRun()
     Sleep, 500
     ImageSearch,,, A_ScreenWidth//2, A_ScreenHeight//4, A_ScreenWidth, A_ScreenHeight, *90 %A_ScriptDir%\errors\you_must_be_standing_in_a_field_to_build_a_Sprinkler.png
     If (ErrorLevel == 0)
-        Return False
+        Return True
     Loop, 4
     {
         Sleep, 100
@@ -808,7 +808,7 @@ BugRun()
     Sleep, 500
     ImageSearch,,, A_ScreenWidth//2, A_ScreenHeight//4, A_ScreenWidth, A_ScreenHeight, *90 %A_ScriptDir%\errors\you_must_be_standing_in_a_field_to_build_a_Sprinkler.png
     If (ErrorLevel == 0)
-        Return False
+        Return True
     Loop, 5
     {
         Sleep, 100
@@ -827,7 +827,7 @@ BugRun()
     Sleep, 500
     ImageSearch,,, A_ScreenWidth//2, A_ScreenHeight//4, A_ScreenWidth, A_ScreenHeight, *90 %A_ScriptDir%\errors\you_must_be_standing_in_a_field_to_build_a_Sprinkler.png
     If (ErrorLevel == 0)
-        Return False
+        Return True
     Loop, 5
     {
         Sleep, 100
