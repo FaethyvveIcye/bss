@@ -137,12 +137,16 @@ HarvestPlanter(planter_number, harvest_unfinished_planter:=true)
                 }
             EPress(5)
             Sleep, 1000
+            harvested_unfinished_planter := False
             ImageSearch, FoundX, FoundY, 0, 0, A_ScreenWidth, A_ScreenHeight, *90 %A_ScriptDir%\images\planter_still_growing.png
             If (ErrorLevel == 0)
             {
                 MouseGetPos, MouseX, MouseY
                 If harvest_unfinished_planter
+                {
                     FoundX -= 200
+                    harvested_unfinished_planter := True
+                }
                 MouseMove, FoundX, FoundY
                 Sleep, 1000
                 Click, Left
@@ -168,7 +172,7 @@ HarvestPlanter(planter_number, harvest_unfinished_planter:=true)
             KeyPress("a", 600)
             KeyPress("s", 200)
             Sleep, 1000
-            If (Planters_planter%planter_number% == "pesticide") || (Planters_planter%planter_number% == "petal") || (Planters_planter%planter_number% == "plenty")
+            If !(harvested_unfinished_planter) && ((Planters_planter%planter_number% == "pesticide") || (Planters_planter%planter_number% == "petal") || (Planters_planter%planter_number% == "plenty"))
             {
                 UseItemFromInventory("micro-converter")
                 Sleep, 1000
